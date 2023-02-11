@@ -16,6 +16,7 @@ class Model(Protocol):  # pylint: disable=too-few-public-methods
     Модель должна содержать атрибут pk
     """
     pk: int
+    #добавить необходимые поля (типа сумма затрат, категория, дата и т.д.)
 
 
 T = TypeVar('T', bound=Model)
