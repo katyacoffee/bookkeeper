@@ -1,5 +1,5 @@
 from bookkeeper.repository.sqlite_repository import SqliteRepository
-from bookkeeper.repository.abstract_repository import Model
+from bookkeeper.repository.abstract_repository import Model, DBWrap
 
 import pytest
 import sqlite3 as sql
@@ -8,32 +8,24 @@ import sqlite3 as sql
 @pytest.fixture
 def custom_class():
     class Custom(Model):
-        pk = 0
-        test_str = ""
-        test_int = 0
+        pk: int = 0
+        test_str: str = ""
+        test_int: int = 0
 
-        def get_table_name(self) -> str:
-            return 'Test'
-
-        def get_columns(self) -> str:
-            return 'test_str varchar(255) NOT NULL, test_int int'
-
-        def get_insert_columns(self) -> str:
-            return 'test_str, test_int'
-
-        def get_insert_values(self) -> str:
-            return f'{self.test_str}, {self.test_int}'
-
+    class CustomWrap(Custom, DBWrap): #TODO: delete!
+        pk: int = 0
+        test_str: str = ""
+        test_int: int = 0
         def get_update_statement(self) -> str:
-            return f'test_str = {self.test_str}, test_int = {self.test_int}'
+            return f'test_str = \'{self.test_str}\', test_int = {self.test_int}'
 
-    return Custom
+    return CustomWrap
 
 
 @pytest.fixture
-def repo():
+def repo(custom_class):
     db = "../../Python_23.db"
-    return SqliteRepository(db)
+    return SqliteRepository(db, custom_class)
 
 
 def test_crud(repo, custom_class):
