@@ -5,11 +5,11 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Iterator
 
-from ..repository.abstract_repository import AbstractRepository
+from ..repository.abstract_repository import AbstractRepository, Model
 
 
 @dataclass
-class Category:
+class Category(Model):
     """
     Категория расходов, хранит название в атрибуте name и ссылку (id) на
     родителя (категория, подкатегорией которой является данная) в атрибуте parent.
@@ -18,6 +18,21 @@ class Category:
     name: str
     parent: int | None = None
     pk: int = 0
+
+    def get_table_name(self) -> str:
+        return 'Category'
+
+    def get_columns(self) -> str:
+        return 'name varchar(255) NOT NULL, parent int'
+
+    def get_insert_columns(self) -> str:
+        return 'name, parent'
+
+    def get_insert_values(self) -> str:
+        return f'{self.name}, {self.parent}'
+
+    def get_update_statement(self) -> str:
+        return f'name = {self.name}, parent = {self.parent}'
 
     def get_parent(self,
                    repo: AbstractRepository['Category']) -> 'Category | None':

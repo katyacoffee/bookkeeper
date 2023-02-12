@@ -11,21 +11,23 @@ class SqliteRepository(AbstractRepository[T]):
         self._container: dict[int, T] = {}
         self._counter = count(1)
         self.db = sql.connect(db)
-        self.db.cursor().execute("CREATE TABLE aaaaa ..? (...)") # тут нужен запрос на создание таблицы (не забыть, что pk - primary key)
+        self.db.cursor().execute(f'CREATE TABLE IF NOT EXISTS {T.get_table_name()} (id int PRIMARY KEY, {T.get_columns()})')
+        #self.db.cursor().execute("CREATE TABLE IF NOT EXISTS Expense (id int PRIMARY KEY, amount int, category int, expense_date text, added_date text, comment varchar(255))")
 
     def add(self, obj: T) -> int:
         """
         Добавить объект в репозиторий, вернуть id объекта,
         также записать id в атрибут pk.
         """
-        self.db.cursor().execute('INSERT IN aaaaa VALUES (...)') # тут нужен запрос на вставку строки со значениями obj (т.е. pk, сумма, категория, дата и т.д.)
+        q = f'INSERT INTO {obj.get_table_name()} ({obj.get_insert_columns()}) VALUES ({obj.get_insert_values()})'
+        self.db.cursor().execute(q)
         obj.pk = self.db.cursor().lastrowid # проверить, что lastrowid действительно возвращает последний айдишник
         return obj.pk
 
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
-        obj = self.db.cursor().execute('SELECT * FROM aaaaa WHERE id = ...') # тут нужно вставить в строку айдишник
-        return None # а тут надо сначала получить строчку из базы, а потом создать obj
+        obj = self.db.cursor().execute(f'SELECT * FROM {T.get_table_name()} WHERE id = {pk}')
+        return obj.fetchone()
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
         """
@@ -33,9 +35,12 @@ class SqliteRepository(AbstractRepository[T]):
         where - условие в виде словаря {'название_поля': значение}
         если условие не задано (по умолчанию), вернуть все записи
         """
+        pass
 
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
+        self.db.cursor().execute(f'UPDATE {obj.get_table_name()} SET {obj.get_update_statement()} WHERE id = {obj.pk}')
 
     def delete(self, pk: int) -> None:
         """ Удалить запись """
+        self.db.cursor().execute(f'DELETE FROM {T.get_table_name()} WHERE id = {pk}')

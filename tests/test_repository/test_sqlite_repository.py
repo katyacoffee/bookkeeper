@@ -1,20 +1,91 @@
-from bookkeeper.repository.sqlite_repository import AbstractRepository
+from bookkeeper.repository.sqlite_repository import SqliteRepository
+from bookkeeper.repository.abstract_repository import Model
 
 import pytest
+import sqlite3 as sql
 
 
-def test_cannot_create_abstract_repository():
-    with pytest.raises(TypeError):
-        AbstractRepository()
+@pytest.fixture
+def custom_class():
+    class Custom(Model):
+        pk = 0
+        test_str = ""
+        test_int = 0
+
+        def get_table_name(self) -> str:
+            return 'Test'
+
+        def get_columns(self) -> str:
+            return 'test_str varchar(255) NOT NULL, test_int int'
+
+        def get_insert_columns(self) -> str:
+            return 'test_str, test_int'
+
+        def get_insert_values(self) -> str:
+            return f'{self.test_str}, {self.test_int}'
+
+        def get_update_statement(self) -> str:
+            return f'test_str = {self.test_str}, test_int = {self.test_int}'
+
+    return Custom
 
 
-def test_can_create_subclass():
-    class Test(AbstractRepository):
-        def add(self, obj): pass
-        def get(self, pk): pass
-        def get_all(self, where=None): pass
-        def update(self, obj): pass
-        def delete(self, pk): pass
+@pytest.fixture
+def repo():
+    db = "../../Python_23.db"
+    return SqliteRepository(db)
 
-    t = Test()
-    assert isinstance(t, AbstractRepository)
+
+def test_crud(repo, custom_class):
+    obj = custom_class()
+    pk = repo.add(obj)
+    assert obj.pk == pk
+    assert repo.get(pk) == obj
+    obj2 = custom_class()
+    obj2.pk = pk
+    repo.update(obj2)
+    assert repo.get(pk) == obj2
+    repo.delete(pk)
+    assert repo.get(pk) is None
+
+
+def test_cannot_add_with_pk(repo, custom_class):
+    obj = custom_class()
+    obj.pk = 1
+    with pytest.raises(ValueError):
+        repo.add(obj)
+
+
+def test_cannot_add_without_pk(repo):
+    with pytest.raises(ValueError):
+        repo.add(0)
+
+
+def test_cannot_delete_unexistent(repo):
+    with pytest.raises(KeyError):
+        repo.delete(1)
+
+
+def test_cannot_update_without_pk(repo, custom_class):
+    obj = custom_class()
+    with pytest.raises(ValueError):
+        repo.update(obj)
+
+
+def test_get_all(repo, custom_class):
+    objects = [custom_class() for i in range(5)]
+    for o in objects:
+        repo.add(o)
+    assert repo.get_all() == objects
+
+
+def test_get_all_with_condition(repo, custom_class):
+    objects = []
+    for i in range(5):
+        o = custom_class()
+        o.name = str(i)
+        o.test = 'test'
+        repo.add(o)
+        objects.append(o)
+    assert repo.get_all({'name': '0'}) == [objects[0]]
+    assert repo.get_all({'test': 'test'}) == objects
