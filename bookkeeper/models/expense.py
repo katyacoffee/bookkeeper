@@ -5,7 +5,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ..repository.abstract_repository import Model, DBWrap
+from ..repository.abstract_repository import Model
 
 
 @dataclass(slots=True)
@@ -25,10 +25,3 @@ class Expense(Model):
     added_date: datetime = field(default_factory=datetime.now)
     comment: str = ''
     pk: int = 0
-
-
-@dataclass(slots=True)
-class ExpenseWrap(Expense, DBWrap):
-
-    def get_update_statement(self) -> str:
-        return f'amount = {self.amount}, category = {self.category}, expense_date = {self.expense_date}, added_date = {self.added_date}, comment = {self.comment}'

@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Iterator
 
-from ..repository.abstract_repository import AbstractRepository, Model, DBWrap
+from ..repository.abstract_repository import AbstractRepository, Model
 
 
 @dataclass
@@ -117,10 +117,3 @@ class Category(Model):
             repo.add(cat)
             created[child] = cat
         return list(created.values())
-
-
-@dataclass
-class CategoryWrap(Category, DBWrap):
-
-    def get_update_statement(self) -> str:
-        return f'name = {self.name}, parent = {self.parent}'

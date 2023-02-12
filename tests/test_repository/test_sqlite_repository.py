@@ -1,8 +1,7 @@
 from bookkeeper.repository.sqlite_repository import SqliteRepository
-from bookkeeper.repository.abstract_repository import Model, DBWrap
+from bookkeeper.repository.abstract_repository import Model
 
 import pytest
-import sqlite3 as sql
 
 
 @pytest.fixture
@@ -12,14 +11,7 @@ def custom_class():
         test_str: str = ""
         test_int: int = 0
 
-    class CustomWrap(Custom, DBWrap): #TODO: delete!
-        pk: int = 0
-        test_str: str = ""
-        test_int: int = 0
-        def get_update_statement(self) -> str:
-            return f'test_str = \'{self.test_str}\', test_int = {self.test_int}'
-
-    return CustomWrap
+    return Custom
 
 
 @pytest.fixture

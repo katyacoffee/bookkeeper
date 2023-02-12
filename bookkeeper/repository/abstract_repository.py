@@ -18,13 +18,6 @@ class Model(Protocol):  # pylint: disable=too-few-public-methods
     pk: int
 
 
-class DBWrap(Protocol):
-
-    @abstractmethod
-    def get_update_statement(self) -> str:
-        pass
-
-
 T = TypeVar('T', bound=Model)
 
 

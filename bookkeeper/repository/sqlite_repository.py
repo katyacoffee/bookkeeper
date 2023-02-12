@@ -1,6 +1,5 @@
 from inspect import get_annotations
 from typing import Any
-from dataclasses import dataclass
 import sqlite3 as sql
 
 from bookkeeper.repository.abstract_repository import AbstractRepository, T
@@ -14,6 +13,7 @@ class SqliteRepository(AbstractRepository[T]):
         self.columns = get_annotations(cls, eval_str=True)
         self.columns.pop('pk')
         self.table_created = False
+        self.cls_type = cls
 
     def add(self, obj: T) -> int:
         """
@@ -49,10 +49,16 @@ class SqliteRepository(AbstractRepository[T]):
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
         conn = sql.connect(self.db_addr)
-        obj = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}')
-        result = obj.fetchone()
+        line = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}')
+        result = line.fetchone()
+        res_obj = self.cls_type()
+        i = 0
+        for x in self.columns:
+            setattr(res_obj, x, result[i]) #TODO: как получать данные из result?
+            i += 1
+
         conn.close()
-        return result
+        return res_obj
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
         """
@@ -65,7 +71,15 @@ class SqliteRepository(AbstractRepository[T]):
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
         conn = sql.connect(self.db_addr)
-        conn.cursor().execute(f'UPDATE {self.table_name} SET {obj.get_update_statement()} WHERE id = {obj.pk}')
+        cols = []
+        for x in self.columns:
+            attr = getattr(obj, x)
+            if type(attr) is str:
+                attr = '\'' + attr + '\''
+            cols.append(f'{x} = {attr}')
+
+        update_statement = ', '.join(cols)
+        conn.cursor().execute(f'UPDATE {self.table_name} SET {update_statement} WHERE id = {obj.pk}')
         conn.close()
 
     def delete(self, pk: int) -> None:
