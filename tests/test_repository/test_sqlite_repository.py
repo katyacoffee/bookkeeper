@@ -8,15 +8,24 @@ import pytest
 def custom_class():
     class Custom(Model):
         pk: int = 0
-        test_str: str = ""
-        test_int: int = 0
+        test_str: str = "aaa"
+        test_int: int = 123
+
+        def __eq__(self, other) -> bool:
+            if self.pk != other.pk:
+                return False
+            if self.test_str != other.test_str:
+                return False
+            if self.test_int != other.test_int:
+                return False
+            return True
 
     return Custom
 
 
 @pytest.fixture
 def repo(custom_class):
-    db = "../../Python_23.db"
+    db = "../../Python_23.db.sqbpro"
     return SqliteRepository(db, custom_class)
 
 

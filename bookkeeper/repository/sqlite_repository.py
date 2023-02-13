@@ -12,50 +12,68 @@ class SqliteRepository(AbstractRepository[T]):
         self.table_name = cls.__name__.lower()
         self.columns = get_annotations(cls, eval_str=True)
         self.columns.pop('pk')
-        self.table_created = False
         self.cls_type = cls
+
+        conn = sql.connect(self.db_addr)
+        with conn:
+            q = f'DROP TABLE IF EXISTS {self.table_name}'
+            conn.cursor().execute(q)
+
+            cols = []
+            for x in self.columns:
+                attr = getattr(cls, x)
+                res_str = f'{x} '
+                type_str = "TEXT"
+                if type(attr) is int:
+                    type_str = "INTEGER"
+                res_str += type_str
+                cols.append(res_str)
+
+            columns = ', '.join(cols)
+            q = f'CREATE TABLE IF NOT EXISTS {self.table_name} (id INTEGER PRIMARY KEY, {columns})'
+            conn.cursor().execute(q)
+        conn.close()
 
     def add(self, obj: T) -> int:
         """
         Добавить объект в репозиторий, вернуть id объекта,
         также записать id в атрибут pk.
         """
-        conn = sql.connect(self.db_addr)
-        executer = conn.cursor()
         col_names = ', '.join(self.columns.keys())
-        placeholders = ', '.join("?" * len(self.columns))
         vals = [getattr(obj, x) for x in self.columns]
-        if not self.table_created:
-            cols = []
-            for x in self.columns:
-                attr = getattr(obj, x)
-                res_str = f'{x} '
-                type_str = "text"
-                if type(attr) is int:
-                    type_str = "int"
-                res_str += type_str
-                cols.append(res_str)
-
-            columns = ', '.join(cols)
-            q = f'CREATE TABLE IF NOT EXISTS {self.table_name} (id int PRIMARY KEY, {columns})'
-            executer.execute(q)
-            self.table_created = True
-
-        executer.execute(f'INSERT INTO {self.table_name} ({col_names}) VALUES ({placeholders})', vals)
-        obj.pk = executer.lastrowid
+        insert_str = ''
+        i = 0
+        for v in vals:
+            if i > 0:
+                insert_str += ', '
+            if type(v) is str:
+                new_v = '\'' + v + '\''
+                insert_str += new_v
+            else:
+                insert_str += f'{v}'
+            i += 1
+        conn = sql.connect(self.db_addr)
+        with conn:
+            q = f'INSERT INTO {self.table_name} ({col_names}) VALUES ({insert_str})'
+            pk = conn.cursor().execute(q).lastrowid
+            obj.pk = pk
         conn.close()
         return obj.pk
 
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
         conn = sql.connect(self.db_addr)
-        line = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}')
-        result = line.fetchone()
-        res_obj = self.cls_type()
-        i = 0
-        for x in self.columns:
-            setattr(res_obj, x, result[i]) #TODO: как получать данные из result?
-            i += 1
+        with conn:
+            result = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}').fetchall()
+            res_obj = self.cls_type()
+            for r in result:
+                i = 1
+                for x in self.columns:
+                    setattr(res_obj, x, r[i])
+                    i += 1
+                res_obj.pk = r[0]
+            if len(result) == 0:
+                res_obj = None
 
         conn.close()
         return res_obj
@@ -71,19 +89,21 @@ class SqliteRepository(AbstractRepository[T]):
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
         conn = sql.connect(self.db_addr)
-        cols = []
-        for x in self.columns:
-            attr = getattr(obj, x)
-            if type(attr) is str:
-                attr = '\'' + attr + '\''
-            cols.append(f'{x} = {attr}')
+        with conn:
+            cols = []
+            for x in self.columns:
+                attr = getattr(obj, x)
+                if type(attr) is str:
+                    attr = '\'' + attr + '\''
+                cols.append(f'{x} = {attr}')
 
-        update_statement = ', '.join(cols)
-        conn.cursor().execute(f'UPDATE {self.table_name} SET {update_statement} WHERE id = {obj.pk}')
+            update_statement = ', '.join(cols)
+            conn.cursor().execute(f'UPDATE {self.table_name} SET {update_statement} WHERE id = {obj.pk}')
         conn.close()
 
     def delete(self, pk: int) -> None:
         """ Удалить запись """
         conn = sql.connect(self.db_addr)
-        conn.cursor().execute(f'DELETE FROM {self.table_name} WHERE id = {pk}')
+        with conn:
+            conn.cursor().execute(f'DELETE FROM {self.table_name} WHERE id = {pk}')
         conn.close()
