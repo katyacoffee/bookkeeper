@@ -39,6 +39,10 @@ class SqliteRepository(AbstractRepository[T]):
         Добавить объект в репозиторий, вернуть id объекта,
         также записать id в атрибут pk.
         """
+        if type(obj) is not self.cls_type:
+            raise ValueError("invalid object")
+        if obj.pk != 0:
+            raise ValueError("pk != 0")
         col_names = ', '.join(self.columns.keys())
         vals = [getattr(obj, x) for x in self.columns]
         insert_str = ''
@@ -84,10 +88,55 @@ class SqliteRepository(AbstractRepository[T]):
         where - условие в виде словаря {'название_поля': значение}
         если условие не задано (по умолчанию), вернуть все записи
         """
-        pass
+        if where is None:
+            conn = sql.connect(self.db_addr)
+            with conn:
+                result = conn.cursor().execute(f'SELECT * FROM {self.table_name}').fetchall()
+                objects = []
+                for r in result:
+                    res_obj = self.cls_type()
+                    i = 1
+                    for x in self.columns:
+                        setattr(res_obj, x, r[i])
+                        i += 1
+                    res_obj.pk = r[0]
+                    objects.append(res_obj)
+
+            conn.close()
+            return objects
+        else:
+            condition = ''
+            i = 0
+            for k, v in where.items():
+                if i > 0:
+                    condition += ' AND '
+                condition += k + ' = '
+                val = f'{v}'
+                if type(v) == str:
+                    val = '\'' + val + '\''
+                condition += val
+                i += 1
+
+            conn = sql.connect(self.db_addr)
+            with conn:
+                result = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE {condition}').fetchall()
+                objects = []
+                for r in result:
+                    res_obj = self.cls_type()
+                    i = 1
+                    for x in self.columns:
+                        setattr(res_obj, x, r[i])
+                        i += 1
+                    res_obj.pk = r[0]
+                    objects.append(res_obj)
+
+            conn.close()
+            return objects
 
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
+        if obj.pk == 0:
+            raise ValueError("invalid pk")
         conn = sql.connect(self.db_addr)
         with conn:
             cols = []
@@ -105,5 +154,8 @@ class SqliteRepository(AbstractRepository[T]):
         """ Удалить запись """
         conn = sql.connect(self.db_addr)
         with conn:
+            result = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}').fetchall()
+            if len(result) == 0:
+                raise KeyError("not found")
             conn.cursor().execute(f'DELETE FROM {self.table_name} WHERE id = {pk}')
         conn.close()

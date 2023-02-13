@@ -76,9 +76,9 @@ def test_get_all_with_condition(repo, custom_class):
     objects = []
     for i in range(5):
         o = custom_class()
-        o.name = str(i)
-        o.test = 'test'
+        o.test_str = str(i)
+        o.test_int = 54321
         repo.add(o)
         objects.append(o)
-    assert repo.get_all({'name': '0'}) == [objects[0]]
-    assert repo.get_all({'test': 'test'}) == objects
+    assert repo.get_all({'test_str': '0'}) == [objects[0]]
+    assert repo.get_all({'test_int': 54321}) == objects
