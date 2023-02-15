@@ -78,6 +78,8 @@ while True:
         exp = Expense(int(amount), cat.pk)
         exp_repo.add(exp)
         print(exp)
+    elif cmd == 'выход':
+        break
     else:
         print(ErrInvalidCmd)
 

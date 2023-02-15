@@ -1,6 +1,7 @@
 from inspect import get_annotations
 from typing import Any
 import sqlite3 as sql
+from datetime import datetime
 
 from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
@@ -50,8 +51,17 @@ class SqliteRepository(AbstractRepository[T]):
         for v in vals:
             if i > 0:
                 insert_str += ', '
-            if type(v) is str:
-                new_v = '\'' + v + '\''
+            if type(v) is str or type(v) is datetime:
+                new_v = f'{v}'
+                if type(v) is datetime:
+                    index = -1
+                    try:
+                        index = new_v.index('.')
+                    except ValueError:
+                        pass
+                    if index > 0:
+                        new_v = new_v[:index]
+                new_v = '\'' + new_v + '\''
                 insert_str += new_v
             elif v is None:
                 insert_str += '0'
