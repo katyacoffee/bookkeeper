@@ -53,6 +53,8 @@ class SqliteRepository(AbstractRepository[T]):
             if type(v) is str:
                 new_v = '\'' + v + '\''
                 insert_str += new_v
+            elif v is None:
+                insert_str += '0'
             else:
                 insert_str += f'{v}'
             i += 1

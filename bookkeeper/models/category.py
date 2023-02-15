@@ -15,7 +15,7 @@ class Category(Model):
     родителя (категория, подкатегорией которой является данная) в атрибуте parent.
     У категорий верхнего уровня parent = None
     """
-    name: str
+    name: str = "default"
     parent: int | None = None
     pk: int = 0
 
