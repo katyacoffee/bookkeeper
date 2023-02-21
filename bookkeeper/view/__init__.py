@@ -36,6 +36,10 @@ class AddExpense(QtWidgets.QWidget):
         self.cat_list_widget = ListWidget()
         self.grid.addWidget(self.cat_list_widget, 2, 2)
 
+        self.btn = QtWidgets.QPushButton('Редактировать')
+        self.grid.addWidget(self.btn, 2, 3)
+        self.btn.clicked.connect(self.get_data)
+
         self.btn = QtWidgets.QPushButton('Добавить')
         self.grid.addWidget(self.btn, 3, 2)
         self.btn.clicked.connect(self.get_data)
@@ -109,6 +113,7 @@ class ListWidget(QtWidgets.QComboBox):
 class MainWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.resize(500, 500) # TODO: подобрать размер относительно габаритов экрана
 
         table_label = QtWidgets.QLabel('Последние расходы')
 
@@ -139,27 +144,28 @@ class MainWindow(QtWidgets.QWidget):
 
         table_label_2 = QtWidgets.QLabel('Бюджет')
 
-        self.budget_table = QtWidgets.QTableWidget(3, 3)
-        self.budget_table.setColumnCount(3)
+        self.budget_table = QtWidgets.QTableWidget(2, 3)
+        self.budget_table.setColumnCount(2)
         self.budget_table.setRowCount(3)
         self.budget_table.setHorizontalHeaderLabels(
-            " Сумма Бюджет".split())
+            ['Сумма', 'Бюджет'])
+        self.budget_table.setVerticalHeaderLabels(
+            ['День', 'Неделя', 'Месяц'])
 
-        header = self.budget_table.horizontalHeader()
-        header.setSectionResizeMode(
+        header_budget = self.budget_table.horizontalHeader()
+        header_budget.setSectionResizeMode(
             0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(
-            1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(
-            2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(
-            3, QtWidgets.QHeaderView.Stretch)
+        header_budget.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.Stretch)
 
         self.budget_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.budget_table.verticalHeader().hide()
-
-        self.layout = QtWidgets.QVBoxLayout()
-        self.setLayout(self.layout)
+        vert_header_budget = self.budget_table.verticalHeader()
+        vert_header_budget.setSectionResizeMode(
+            0, QtWidgets.QHeaderView.Stretch)
+        vert_header_budget.setSectionResizeMode(
+            1, QtWidgets.QHeaderView.Stretch)
+        vert_header_budget.setSectionResizeMode(
+            2, QtWidgets.QHeaderView.Stretch)
 
         self.layout.addWidget(table_label_2)
         self.layout.addWidget(self.budget_table)
@@ -167,8 +173,10 @@ class MainWindow(QtWidgets.QWidget):
         # добавить таблицу Бюджета
 
         self.expense_adder = AddExpense()
+        # self.budget_adder = AddExpense()
 
         self.layout.addWidget(self.expense_adder)
+        # self.layout.addWidget(self.budget_adder)
 
     def set_data(self, data: list[list[str]]):
         for i, row in enumerate(data):
@@ -182,12 +190,3 @@ app = QtWidgets.QApplication(sys.argv)  # передаем аргументы к
 window = MainWindow()
 window.show()
 app.exec()
-# class MyWidget(QtWidgets.QWidget):
-
-
-# window = QtWidgets.QWidget()
-# window.setWindowTitle('Hello! ') #назначается заголовок
-# window.resize(300, 100) # размер
-# window.show() #для того, чтобы окно отобразилось на экране
-
-# sys.exit(app.exec()) #запуск приложения с помощью метода exec, с помощью sys.exit код передается дальше ОС
