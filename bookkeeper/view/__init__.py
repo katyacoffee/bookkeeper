@@ -1,7 +1,9 @@
-from dataclasses import dataclass
 import sys
+from dataclasses import dataclass
 
-from PySide6 import QtCore, QtGui, QtWidgets  # последний - виджет, содержащий все необходимые документы
+from PySide6 import QtGui, QtWidgets  # последний - виджет, содержащий все необходимые документы
+
+from bookkeeper.models.category import Category
 
 
 @dataclass
@@ -59,6 +61,9 @@ class AddExpense(QtWidgets.QWidget):
         print(item)  # TODO: здесь будет соединение с базой
         return item
 
+    def set_category_list(self, categories: list[Category]) -> None:
+        self.cat_list_widget.set_category_list(categories)
+
 
 class AddCat(QtWidgets.QLabel):
     def __init__(self, name: str, parent: int = 0, *args, **kwargs):
@@ -82,21 +87,19 @@ class ListWidget(QtWidgets.QComboBox):
         self.setLayout(self.layout)
 
         self.lines = []
-        self.add_line()
-        self.add_line('Хозтовары')
-        self.add_line('Автотовары')
-        self.add_line('Лекарства')
-        self.add_line('Книги')
-        self.add_line('Одежда')
-        self.add_line('Украшения')
-        self.lines = sorted(self.lines)
+        self.cat_list = []
 
-        for line in self.lines:
-            self.addItem(line)
+        # self.add_line('Хозтовары')
+        # self.add_line('Автотовары')
+        # self.add_line('Лекарства')
+        # self.add_line('Книги')
+        # self.add_line('Одежда')
+        # self.add_line('Украшения')
 
-    def add_line(self, name: str = 'Продукты', parent: int = 0):
-        AddCat(name, parent)
-        self.lines.append(name)
+
+    def add_line(self, cat: Category = Category('Продукты')):
+        AddCat(cat.name, cat.parent)
+        self.lines.append(cat.name)
 
     def changeEvent(self, event):
         if all(line != '' for line in self.lines):
@@ -108,6 +111,16 @@ class ListWidget(QtWidgets.QComboBox):
     def get_id(self) -> int:
         print(self.currentText())
         return 1 # TODO: сделать вывод id категории из таблицы категорий по self.text()
+
+    def set_category_list(self, categories: list[Category]) -> None:
+        self.cat_list = categories
+        for cat in self.cat_list:
+            self.add_line(cat)
+
+        self.lines = sorted(self.lines)
+        for line in self.lines:
+            self.addItem(line)
+        self.repaint()
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -183,10 +196,16 @@ class MainWindow(QtWidgets.QWidget):
             for j, x in enumerate(row):
                 self.expenses_table.setItem(i, j, QtWidgets.QTableWidgetItem(x.capitalize()))
 
+    def set_category_list(self, categories: list[Category]) -> None:
+        self.expense_adder.set_category_list(categories)
 
- # app = QtWidgets.QApplication(sys.argv)  # при создании приложения передаются в него аргументы командной строки и само название приложения
 
-app = QtWidgets.QApplication(sys.argv)  # передаем аргументы командной строки
-window = MainWindow()
-window.show()
-app.exec()
+class View:
+    def __init__(self):
+        self.window = MainWindow()
+
+    def show(self):
+        self.window.show()
+
+    def set_category_list(self, categories: list[Category]) -> None:
+        self.window.set_category_list(categories)
