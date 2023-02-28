@@ -11,6 +11,7 @@ else:
     app = QtWidgets.QApplication.instance()
 view = View()
 bk = Bookkeeper(view)
+view.set_bookkeeper(bk)
 view.show()
 app.exec()
 exit()

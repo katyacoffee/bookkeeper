@@ -25,3 +25,10 @@ class Expense(Model):
     added_date: datetime = field(default_factory=datetime.now)
     comment: str = ''
     pk: int = 0
+
+
+@dataclass
+class AddExpenseItem:
+    category: int = 0
+    comment: str = ''
+    amount: int = 0
