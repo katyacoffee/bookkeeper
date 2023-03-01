@@ -1,6 +1,8 @@
 import sys
 from dataclasses import dataclass
 from typing import Protocol
+from datetime import datetime as dt
+import datetime
 
 from PySide6 import QtGui, QtWidgets  # последний - виджет, содержащий все необходимые документы
 
@@ -11,6 +13,12 @@ from bookkeeper.view.bookkeeper import AbstractBookkeeper
 
 class AbstractWindow(Protocol):
     def update_exp_table(self) -> None:
+        pass
+
+    def update_bud_table(self) -> None:
+        pass
+
+    def open_editor(self) -> None:
         pass
 
 
@@ -72,11 +80,12 @@ class AddExpense(QtWidgets.QWidget):
         self.sum_widget.clear()
         self.bk.add_expense(self.last_expense_item)
         self.win.update_exp_table()
+        self.win.update_bud_table()
         print(self.last_expense_item)
         return
 
     def edit_data(self):
-        pass
+        self.win.open_editor()
 
     def set_category_list(self, categories: list[Category]) -> None:
         self.cat_list_widget.set_category_list(categories)
@@ -145,12 +154,35 @@ class ListWidget(QtWidgets.QComboBox):
         self.bk = bk
 
 
+class EditorWindow(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.resize(300, 300)
+        self.setWindowTitle('Edit')
+        self.parentWindow: AbstractWindow
+
+        self.layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.cat_list_widget = ListWidget()
+        self.layout.addWidget(self.cat_list_widget)
+
+    def set_parent_window(self, win: AbstractWindow):
+        self.parentWindow = win
+
+    def set_category_list(self, categories: list[Category]) -> None:
+        self.cat_list_widget.set_category_list(categories)
+
+
 class MainWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.resize(500, 500) # TODO: подобрать размер относительно габаритов экрана
+        self.setWindowTitle('Bookkeeper')
 
         self.bk: AbstractBookkeeper
+        self.editor: EditorWindow
+        self.categories: list[Category]
 
         table_label = QtWidgets.QLabel('Последние расходы')
 
@@ -223,11 +255,13 @@ class MainWindow(QtWidgets.QWidget):
 
     def set_category_list(self, categories: list[Category]) -> None:
         self.expense_adder.set_category_list(categories)
+        self.categories = categories
 
     def set_bookkeeper(self, bk: AbstractBookkeeper):
         self.bk = bk
         self.expense_adder.set_bookkeeper(bk)
         self.update_exp_table()
+        self.update_bud_table()
 
     def update_exp_table(self):
         all_exp = self.bk.get_all_expenses()
@@ -248,6 +282,29 @@ class MainWindow(QtWidgets.QWidget):
 
             if i == 0:
                 break
+
+    def update_bud_table(self):
+        all_exp = self.bk.get_all_expenses()
+        exp_day = 0
+        exp_week = 0
+        exp_month = 0
+        for exp in all_exp:
+            date = dt.strptime(f'{exp.expense_date}', '%Y-%m-%d %H:%M:%S')
+            if date.day == dt.today().day:
+                exp_day += int(exp.amount)
+            if date >= dt.today() - datetime.timedelta(days=7):
+                exp_week += int(exp.amount)
+            if date.month == dt.today().month:
+                exp_month += int(exp.amount)
+        self.budget_table.setItem(0, 0, QtWidgets.QTableWidgetItem(f'{exp_day}'))
+        self.budget_table.setItem(1, 0, QtWidgets.QTableWidgetItem(f'{exp_week}'))
+        self.budget_table.setItem(2, 0, QtWidgets.QTableWidgetItem(f'{exp_month}'))
+
+    def open_editor(self):
+        self.editor = EditorWindow()
+        self.editor.set_parent_window(self)
+        self.editor.set_category_list(self.categories)
+        self.editor.show()
 
 
 class View:
