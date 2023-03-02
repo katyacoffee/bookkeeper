@@ -5,7 +5,7 @@ from datetime import datetime as dt
 import datetime
 
 from PySide6 import QtGui, QtWidgets  # последний - виджет, содержащий все необходимые документы
-from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QComboBox, QStyle, QMessageBox
 
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import AddExpenseItem
@@ -25,6 +25,9 @@ class AbstractWindow(Protocol):
     def question_del(self) -> None:  #TEST
         pass  #TEST
 
+    def set_budget(self, period: str, amount: int) -> None:
+        pass
+
 
 # from PySide6.QtWidgets import
 class AddExpense(QtWidgets.QWidget):
@@ -43,11 +46,11 @@ class AddExpense(QtWidgets.QWidget):
 
         self.comment = 'TODO: сделать добавление комментария?'
 
-        sum_text_widget = QtWidgets.QLabel("Сумма")
-        self.grid.addWidget(sum_text_widget, 1, 1)
+        self.sum_text_widget = QtWidgets.QLabel("Сумма")
+        self.grid.addWidget(self.sum_text_widget, 1, 1)
 
-        cat_text_widget = QtWidgets.QLabel("Категория")
-        self.grid.addWidget(cat_text_widget, 2, 1)
+        self.cat_text_widget = QtWidgets.QLabel("Категория")
+        self.grid.addWidget(self.cat_text_widget, 2, 1)
 
         self.sum_widget = QtWidgets.QLineEdit('')
         self.sum_widget.setValidator(QtGui.QIntValidator(1, 10000000, self))
@@ -118,8 +121,8 @@ class AddCat(QtWidgets.QLabel):
         self.cat_name = name
         self.cat_parent = parent
 
-    def is_filled(self):
-        return True  # TODO
+    # def is_filled(self):
+    #     return True  # TODO
 
     def add_data(self):
         pass  # TODO: добавление категории в базу
@@ -171,6 +174,7 @@ class EditorWindow(QtWidgets.QWidget):
         self.resize(400, 400)
         self.setWindowTitle('Edit')
         self.parentWindow: AbstractWindow
+        self.bk: AbstractBookkeeper
 
         self.grid = QtWidgets.QGridLayout()
 
@@ -182,19 +186,19 @@ class EditorWindow(QtWidgets.QWidget):
         self.grid.addWidget(self.cat_list_widget, 2, 1)
         self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
 
-        ed_text_widget = QtWidgets.QLabel("Редактировать категорию")
-        self.ed_text_widget.st
-        self.grid.addWidget(ed_text_widget, 1, 1)
+        self.ed_text_widget = QtWidgets.QLabel("Редактировать категорию")
+        self.grid.addWidget(self.ed_text_widget, 1, 1)
+        self.ed_text_widget.setStyleSheet('font-weight: bold;')
 
         self.btn_del_cat = QtWidgets.QPushButton('Удалить категорию')
         self.grid.addWidget(self.btn_del_cat, 2, 2)
         self.btn_del_cat.setStyleSheet('background-color: #CD5555;border-radius: 5px; height: 20px; width: 140px;')
 
-        new1_text_widget = QtWidgets.QLabel("Новая категория")
-        self.grid.addWidget(new1_text_widget, 3, 1)
+        self.new1_text_widget = QtWidgets.QLabel("Новая категория")
+        self.grid.addWidget(self.new1_text_widget, 3, 1)
 
-        new2_text_widget = QtWidgets.QLabel("Родительская категория")
-        self.grid.addWidget(new2_text_widget, 3, 2)
+        self.new2_text_widget = QtWidgets.QLabel("Родительская категория")
+        self.grid.addWidget(self.new2_text_widget, 3, 2)
 
         self.new1_widget = QtWidgets.QLineEdit('')
         self.new1_widget.setValidator(QtGui.QIntValidator(1, 1000000, self))
@@ -211,13 +215,14 @@ class EditorWindow(QtWidgets.QWidget):
         self.btn_add1.setStyleSheet('background-color: #6495ED; border-radius: 5px; height: 20px; width: 100px;')
         # self.btn_add1.clicked.connect(self.get_data) # TODO !!!
 
-        ed_bud_text_widget = QtWidgets.QLabel("Редактировать бюджет")
-        self.grid.addWidget(ed_bud_text_widget, 5, 1)
+        self.ed_bud_text_widget = QtWidgets.QLabel("Редактировать бюджет")
+        self.grid.addWidget(self.ed_bud_text_widget, 5, 1)
+        self.ed_bud_text_widget.setStyleSheet('font-weight: bold;')
 
         self.btn_del_bud = QtWidgets.QPushButton('Удалить все расходы')
         self.grid.addWidget(self.btn_del_bud, 6, 1)
         self.btn_del_bud.setStyleSheet('background-color: #CD5555; border-radius: 5px; height: 20px; width: 140px;')
-        # self.btn_add1.clicked.connect(self.get_data) # TODO !!!
+        self.btn_del_bud.clicked.connect(self.call_del_all_question)
 
         new_bud_text_widget = QtWidgets.QLabel("Задать бюджет")
         self.grid.addWidget(new_bud_text_widget, 7, 1)
@@ -247,7 +252,7 @@ class EditorWindow(QtWidgets.QWidget):
         self.btn_add_bud = QtWidgets.QPushButton('Задать')
         self.grid.addWidget(self.btn_add_bud, 8, 3)
         self.btn_add_bud.setStyleSheet('background-color: #6495ED; border-radius: 5px; height: 20px; width: 100px;')
-        # self.btn_add1.clicked.connect(self.get_data) # TODO !!!
+        self.btn_add_bud.clicked.connect(self.get_bud_data)
 
         #
         # self.cat_list_widget = ListWidget()
@@ -269,6 +274,34 @@ class EditorWindow(QtWidgets.QWidget):
     def set_category_list(self, categories: list[Category]) -> None:
         self.cat_list_widget.set_category_list(categories)
 
+    def set_bookkeeper(self, bk: AbstractBookkeeper):
+        self.bk = bk
+
+    def call_del_all_question(self):
+        msgbox = QMessageBox(self)
+        msgbox.setIcon(QMessageBox.Warning)
+        msgbox.setText("Вы уверены, что хотите удалить все расходы?")
+        msgbox.setWindowTitle('Очистить расходы')
+        msgbox.addButton(QMessageBox.Yes)
+        msgbox.addButton(QMessageBox.No)
+        msgbox.setDefaultButton(QMessageBox.No)
+        msgbox.buttonClicked.connect(self.del_all_expenses)
+        msgbox.exec_()
+
+    def del_all_expenses(self, button):
+        if button.text() == '&No':
+            return
+        self.bk.del_all_expenses()
+        self.parentWindow.update_exp_table()
+        self.parentWindow.update_bud_table()
+
+    def get_bud_data(self):
+        bud = self.add_bud_widget.text()
+        if bud == '':
+            bud = '0'
+        period = self.combobox1.currentText()
+        self.parentWindow.set_budget(period, int(bud))
+
     # def open_editor(self):  #???
     #     self.editor = QMessageBox()
     #     self.editor.set_parent_window(self)
@@ -287,7 +320,7 @@ class MainWindow(QtWidgets.QWidget):
         # self.setStyleSheet('background-color: #188')
 
         self.bk: AbstractBookkeeper
-        self.editor: EditorWindow
+        self.editor = EditorWindow()
         self.categories: list[Category]
 
         table_label = QtWidgets.QLabel('Последние расходы')
@@ -378,10 +411,19 @@ class MainWindow(QtWidgets.QWidget):
     def set_bookkeeper(self, bk: AbstractBookkeeper):
         self.bk = bk
         self.expense_adder.set_bookkeeper(bk)
+        self.editor.set_bookkeeper(bk)
         self.update_exp_table()
         self.update_bud_table()
 
     def update_exp_table(self):
+        i = 0
+        while i < self.expenses_table.rowCount():
+            self.expenses_table.setItem(i, 0, QtWidgets.QTableWidgetItem(''))
+            self.expenses_table.setItem(i, 1, QtWidgets.QTableWidgetItem(''))
+            self.expenses_table.setItem(i, 2, QtWidgets.QTableWidgetItem(''))
+            self.expenses_table.setItem(i, 3, QtWidgets.QTableWidgetItem(''))
+            i += 1
+
         all_exp = self.bk.get_all_expenses()
         i = len(all_exp)
         for exp in all_exp:
@@ -419,10 +461,32 @@ class MainWindow(QtWidgets.QWidget):
         self.budget_table.setItem(2, 0, QtWidgets.QTableWidgetItem(f'{exp_month}'))
 
     def open_editor(self):
-        self.editor = EditorWindow()
         self.editor.set_parent_window(self)
         self.editor.set_category_list(self.categories)
         self.editor.show()
+
+    def set_daily_budget(self, amount: int):
+        self.budget_table.setItem(0, 1, QtWidgets.QTableWidgetItem(f'{amount}'))
+        self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount*7}'))
+        self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount*30}'))
+
+    def set_weekly_budget(self, amount: int):
+        self.budget_table.setItem(0, 1, QtWidgets.QTableWidgetItem(f'{amount // 7}'))
+        self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount}'))
+        self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount // 7 * 30}'))
+
+    def set_monthly_budget(self, amount: int):
+        self.budget_table.setItem(0, 1, QtWidgets.QTableWidgetItem(f'{amount // 30}'))
+        self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount // 30 * 7}'))
+        self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount}'))
+
+    def set_budget(self, period: str, amount: int):
+        if period == 'День':
+            self.set_daily_budget(amount)
+        elif period == 'Неделя':
+            self.set_weekly_budget(amount)
+        elif period == 'Месяц':
+            self.set_monthly_budget(amount)
 
 
 class View:

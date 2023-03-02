@@ -171,3 +171,10 @@ class SqliteRepository(AbstractRepository[T]):
                 raise KeyError("not found")
             conn.cursor().execute(f'DELETE FROM {self.table_name} WHERE id = {pk}')
         conn.close()
+
+    def delete_all(self) -> None:
+        """ Очистка таблицы """
+        conn = sql.connect(self.db_addr)
+        with conn:
+            conn.cursor().execute(f'DELETE FROM {self.table_name}')
+        conn.close()

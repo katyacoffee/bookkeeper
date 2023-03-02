@@ -17,6 +17,9 @@ class AbstractBookkeeper(Protocol):
     def get_cat_id_by_name(self, name: str) -> int:
         pass
 
+    def del_all_expenses(self) -> None:
+        pass
+
 
 class AbstractView(Protocol):
     def set_category_list(self, categories: list[Category]) -> None:
@@ -48,3 +51,6 @@ class Bookkeeper:
         if len(cat) == 0:
             return 0
         return cat[0].pk
+
+    def del_all_expenses(self):
+        self.exp_repo.delete_all()
