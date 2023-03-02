@@ -5,6 +5,7 @@ from datetime import datetime as dt
 import datetime
 
 from PySide6 import QtGui, QtWidgets  # последний - виджет, содержащий все необходимые документы
+from PySide6.QtWidgets import QComboBox
 
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import AddExpenseItem
@@ -20,6 +21,9 @@ class AbstractWindow(Protocol):
 
     def open_editor(self) -> None:
         pass
+
+    def question_del(self) -> None:  #TEST
+        pass  #TEST
 
 
 # from PySide6.QtWidgets import
@@ -47,17 +51,22 @@ class AddExpense(QtWidgets.QWidget):
 
         self.sum_widget = QtWidgets.QLineEdit('')
         self.sum_widget.setValidator(QtGui.QIntValidator(1, 10000000, self))
+        self.sum_widget.setStyleSheet('border-radius: 5px;')
         self.grid.addWidget(self.sum_widget, 1, 2)
 
         self.cat_list_widget = ListWidget()
         self.grid.addWidget(self.cat_list_widget, 2, 2)
+        self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
 
         self.btn_edit = QtWidgets.QPushButton('Редактировать')
         self.grid.addWidget(self.btn_edit, 2, 3)
+        self.btn_edit.setStyleSheet('background-color: #CDAF95; border-radius: 5px; height: 20px; width: 120px;')
         self.btn_edit.clicked.connect(self.edit_data)
 
         self.btn_add = QtWidgets.QPushButton('Добавить')
         self.grid.addWidget(self.btn_add, 3, 2)
+        self.btn_add.setGeometry(10, 10, 30, 30)
+        self.btn_add.setStyleSheet('background-color: #CDAF95; border-radius: 5px; height: 20px;')
         self.btn_add.clicked.connect(self.get_data)
 
         self.setLayout(self.grid)
@@ -97,6 +106,9 @@ class AddExpense(QtWidgets.QWidget):
     def set_window(self, win: AbstractWindow):
         self.win = win
 
+    # def question_win(self, queswin: AbstractWindow):  # TEST
+    #     self.queswin = queswin  # TEST
+
 
 class AddCat(QtWidgets.QLabel):
     def __init__(self, name: str, parent: int = 0, *args, **kwargs):
@@ -122,7 +134,6 @@ class ListWidget(QtWidgets.QComboBox):
         self.lines = []
         self.cat_list = []
         self.bk: AbstractBookkeeper
-
 
     def add_line(self, cat: Category = Category('Продукты')):
         AddCat(cat.name, cat.parent)
@@ -157,15 +168,100 @@ class ListWidget(QtWidgets.QComboBox):
 class EditorWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.resize(300, 300)
+        self.resize(400, 400)
         self.setWindowTitle('Edit')
         self.parentWindow: AbstractWindow
 
-        self.layout = QtWidgets.QVBoxLayout()
-        self.setLayout(self.layout)
+        self.grid = QtWidgets.QGridLayout()
+
+        # self.layout = QtWidgets.QVBoxLayout()
+        # self.setLayout(self.layout)
 
         self.cat_list_widget = ListWidget()
-        self.layout.addWidget(self.cat_list_widget)
+        # self.layout.addWidget(self.cat_list_widget, 2, 1)
+        self.grid.addWidget(self.cat_list_widget, 2, 1)
+        self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
+
+        ed_text_widget = QtWidgets.QLabel("Редактировать категорию")
+        self.ed_text_widget.st
+        self.grid.addWidget(ed_text_widget, 1, 1)
+
+        self.btn_del_cat = QtWidgets.QPushButton('Удалить категорию')
+        self.grid.addWidget(self.btn_del_cat, 2, 2)
+        self.btn_del_cat.setStyleSheet('background-color: #CD5555;border-radius: 5px; height: 20px; width: 140px;')
+
+        new1_text_widget = QtWidgets.QLabel("Новая категория")
+        self.grid.addWidget(new1_text_widget, 3, 1)
+
+        new2_text_widget = QtWidgets.QLabel("Родительская категория")
+        self.grid.addWidget(new2_text_widget, 3, 2)
+
+        self.new1_widget = QtWidgets.QLineEdit('')
+        self.new1_widget.setValidator(QtGui.QIntValidator(1, 1000000, self))
+        self.new1_widget.setStyleSheet('border-radius: 5px;')
+        self.grid.addWidget(self.new1_widget, 4, 1)
+
+        self.new2_widget = QtWidgets.QLineEdit('')
+        self.new2_widget.setValidator(QtGui.QIntValidator(1, 1000000, self))
+        self.new2_widget.setStyleSheet('border-radius: 5px;')
+        self.grid.addWidget(self.new2_widget, 4, 2)
+
+        self.btn_add1 = QtWidgets.QPushButton('Добавить')
+        self.grid.addWidget(self.btn_add1, 4, 3)
+        self.btn_add1.setStyleSheet('background-color: #6495ED; border-radius: 5px; height: 20px; width: 100px;')
+        # self.btn_add1.clicked.connect(self.get_data) # TODO !!!
+
+        ed_bud_text_widget = QtWidgets.QLabel("Редактировать бюджет")
+        self.grid.addWidget(ed_bud_text_widget, 5, 1)
+
+        self.btn_del_bud = QtWidgets.QPushButton('Удалить все расходы')
+        self.grid.addWidget(self.btn_del_bud, 6, 1)
+        self.btn_del_bud.setStyleSheet('background-color: #CD5555; border-radius: 5px; height: 20px; width: 140px;')
+        # self.btn_add1.clicked.connect(self.get_data) # TODO !!!
+
+        new_bud_text_widget = QtWidgets.QLabel("Задать бюджет")
+        self.grid.addWidget(new_bud_text_widget, 7, 1)
+
+        # self.cat_list_widget = ListWidget()
+        # # self.layout.addWidget(self.cat_list_widget, 2, 1)
+        # self.grid.addWidget(self.cat_list_widget, 8, 1)
+
+        self.combobox1 = QComboBox()
+        self.combobox1.addItem('День')
+        self.combobox1.addItem('Неделя')
+        self.combobox1.addItem('Месяц')
+        self.combobox1.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
+
+
+        # layout = QVBoxLayout()
+        self.grid.addWidget(self.combobox1, 8, 1)
+
+        # container = QWidget()
+        # container.setLayout(layout)
+
+        self.add_bud_widget = QtWidgets.QLineEdit('')
+        self.add_bud_widget.setValidator(QtGui.QIntValidator(1, 1000000, self))
+        self.add_bud_widget.setStyleSheet('border-radius: 5px;')
+        self.grid.addWidget(self.add_bud_widget, 8, 2)
+
+        self.btn_add_bud = QtWidgets.QPushButton('Задать')
+        self.grid.addWidget(self.btn_add_bud, 8, 3)
+        self.btn_add_bud.setStyleSheet('background-color: #6495ED; border-radius: 5px; height: 20px; width: 100px;')
+        # self.btn_add1.clicked.connect(self.get_data) # TODO !!!
+
+        #
+        # self.cat_list_widget = ListWidget()
+        # self.grid.addWidget(self.cat_list_widget, 2, 2)
+        #
+        # self.btn_edit = QtWidgets.QPushButton('Удалить')
+        # self.grid.addWidget(self.btn_edit, 2, 3)
+        # self.btn_edit.clicked.connect(self.edit_data)
+        #
+        # self.btn_add = QtWidgets.QPushButton('Добавить')
+        # self.grid.addWidget(self.btn_add, 3, 2)
+        # self.btn_add.clicked.connect(self.get_data)
+        #
+        self.setLayout(self.grid)
 
     def set_parent_window(self, win: AbstractWindow):
         self.parentWindow = win
@@ -173,12 +269,22 @@ class EditorWindow(QtWidgets.QWidget):
     def set_category_list(self, categories: list[Category]) -> None:
         self.cat_list_widget.set_category_list(categories)
 
+    # def open_editor(self):  #???
+    #     self.editor = QMessageBox()
+    #     self.editor.set_parent_window(self)
+    #     self.editor.set_category_list(self.categories)
+    #     self.editor.show()
+
+    # def del_cat(self):  #TEST
+    #     self.queswin.open_editor()  #TEST
+
 
 class MainWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.resize(500, 500) # TODO: подобрать размер относительно габаритов экрана
         self.setWindowTitle('Bookkeeper')
+        # self.setStyleSheet('background-color: #188')
 
         self.bk: AbstractBookkeeper
         self.editor: EditorWindow
@@ -204,6 +310,8 @@ class MainWindow(QtWidgets.QWidget):
 
         self.expenses_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.expenses_table.verticalHeader().hide()
+
+        self.expenses_table.setStyleSheet('border: 1px solid gray;')
 
         self.layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.layout)
@@ -235,6 +343,16 @@ class MainWindow(QtWidgets.QWidget):
             1, QtWidgets.QHeaderView.Stretch)
         vert_header_budget.setSectionResizeMode(
             2, QtWidgets.QHeaderView.Stretch)
+
+        item1 = QtWidgets.QTableWidgetItem('Сумма')
+        item1.setBackground(QtGui.QColor(205, 175, 149))
+        self.budget_table.setHorizontalHeaderItem(0, item1)
+
+        item2 = QtWidgets.QTableWidgetItem('Бюджет')
+        item2.setBackground(QtGui.QColor(205, 175, 149))
+        self.budget_table.setHorizontalHeaderItem(1, item2)
+
+        self.budget_table.setStyleSheet('border: 1px solid gray; border-radius: 5px;')
 
         self.layout.addWidget(table_label_2)
         self.layout.addWidget(self.budget_table)
