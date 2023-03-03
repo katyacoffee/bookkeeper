@@ -8,7 +8,13 @@ class AbstractBookkeeper(Protocol):
     def add_expense(self, expense: AddExpenseItem) -> None:
         pass
 
+    def add_category(self, name: str, parent: int) -> None:
+        pass
+
     def get_all_expenses(self) -> list[Expense]:
+        pass
+
+    def get_all_categories(self) -> list[Category]:
         pass
 
     def get_cat_by_id(self, id: int) -> Category:
@@ -18,6 +24,9 @@ class AbstractBookkeeper(Protocol):
         pass
 
     def del_all_expenses(self) -> None:
+        pass
+
+    def del_cat(self, cat: str) -> None:
         pass
 
 
@@ -40,17 +49,29 @@ class Bookkeeper:
     def add_expense(self, expense: AddExpenseItem):
         self.exp_repo.add(Expense(expense.amount, expense.category))
 
+    def add_category(self, name: str, parent: int):
+        self.cat_repo.add(Category(name, parent))
+
     def get_all_expenses(self):
         return self.exp_repo.get_all()
+
+    def get_all_categories(self):
+        return self.cat_repo.get_all()
 
     def get_cat_by_id(self, id: int):
         return self.cat_repo.get(id)
 
     def get_cat_id_by_name(self, name: str):
-        cat = self.cat_repo.get_all({'name':name})
+        cat = self.cat_repo.get_all({'name': name})
         if len(cat) == 0:
             return 0
         return cat[0].pk
 
     def del_all_expenses(self):
         self.exp_repo.delete_all()
+
+    def del_cat(self, cat: str):
+        cats = self.cat_repo.get_all({'name': cat})
+        if len(cats) == 0:
+            return
+        self.cat_repo.delete(cats[0].pk)
