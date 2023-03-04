@@ -29,6 +29,9 @@ class AbstractBookkeeper(Protocol):
     def del_cat(self, cat: str) -> None:
         pass
 
+    def update_expense(self, date: str, cat: str, comment: str) -> None:
+        pass
+
 
 class AbstractView(Protocol):
     def set_category_list(self, categories: list[Category]) -> None:
@@ -75,3 +78,14 @@ class Bookkeeper:
         if len(cats) == 0:
             return
         self.cat_repo.delete(cats[0].pk)
+
+    def update_expense(self, date: str, cat: str, comment: str):
+        cat_id = self.get_cat_id_by_name(cat)
+        if cat_id == 0:
+            return
+        exps = self.exp_repo.get_all({'added_date': date, 'category': cat_id})
+        if len(exps) == 0:
+            return
+        new_exp = exps[0]
+        new_exp.comment = comment
+        self.exp_repo.update(new_exp)

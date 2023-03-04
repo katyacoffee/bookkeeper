@@ -1,4 +1,4 @@
-import sys
+import sys, time
 from dataclasses import dataclass
 from typing import Protocol
 from datetime import datetime as dt
@@ -6,7 +6,7 @@ import datetime
 
 from PySide6 import QtGui, QtWidgets, QtCore  # последний - виджет, содержащий все необходимые документы
 from PySide6.QtWidgets import QComboBox, QStyle, QMessageBox
-from PySide6.QtCore import QRegularExpression
+from PySide6.QtCore import QRegularExpression, Qt
 from PySide6.QtGui import QRegularExpressionValidator
 
 from bookkeeper.models.category import Category
@@ -393,6 +393,7 @@ class MainWindow(QtWidgets.QWidget):
         self.expenses_table = QtWidgets.QTableWidget(4, 20)
         self.expenses_table.setColumnCount(4)
         self.expenses_table.setRowCount(20)
+        # self.expenses_table.setModel(ItemModel(20, 4))
         self.expenses_table.setHorizontalHeaderLabels(
             "Дата Сумма Категория Комментарий".split())
 
@@ -406,7 +407,7 @@ class MainWindow(QtWidgets.QWidget):
         header.setSectionResizeMode(
             3, QtWidgets.QHeaderView.Stretch)
 
-        self.expenses_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        #self.expenses_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.expenses_table.verticalHeader().hide()
 
         self.expenses_table.setStyleSheet('border: 1px solid gray;')
@@ -417,7 +418,19 @@ class MainWindow(QtWidgets.QWidget):
         self.layout.addWidget(table_label)
         self.layout.addWidget(self.expenses_table)
 
-        table_label_2 = QtWidgets.QLabel('Бюджет')
+        self.bud_layout = QtWidgets.QGridLayout()
+
+        self.btn_add_comm = QtWidgets.QPushButton('Добавить комментарии')
+        self.btn_add_comm.setStyleSheet('QPushButton { background-color: #CDAF95; border-radius: 5px; height: 20px; width: 150px; }'
+                                   'QPushButton:pressed { background-color: #808A87 }')
+        self.btn_add_comm.setMaximumWidth(350)
+        self.btn_add_comm.clicked.connect(self.save_comments)
+        self.bud_layout.addWidget(self.btn_add_comm, 0, 1)
+
+        self.table_label_2 = QtWidgets.QLabel('Бюджет')
+        self.bud_layout.addWidget(self.table_label_2, 0, 0)
+
+        self.layout.addLayout(self.bud_layout)
 
         self.budget_table = QtWidgets.QTableWidget(2, 3)
         self.budget_table.setColumnCount(2)
@@ -452,7 +465,6 @@ class MainWindow(QtWidgets.QWidget):
 
         self.budget_table.setStyleSheet('border: 1px solid gray; border-radius: 5px;')
 
-        self.layout.addWidget(table_label_2)
         self.layout.addWidget(self.budget_table)
 
         # добавить таблицу Бюджета
@@ -483,10 +495,10 @@ class MainWindow(QtWidgets.QWidget):
     def update_exp_table(self):
         i = 0
         while i < self.expenses_table.rowCount():
-            self.expenses_table.setItem(i, 0, QtWidgets.QTableWidgetItem(''))
-            self.expenses_table.setItem(i, 1, QtWidgets.QTableWidgetItem(''))
-            self.expenses_table.setItem(i, 2, QtWidgets.QTableWidgetItem(''))
-            self.expenses_table.setItem(i, 3, QtWidgets.QTableWidgetItem(''))
+            for j in range(0,4):
+                empty_item = QtWidgets.QTableWidgetItem('')
+                empty_item.setFlags(~Qt.ItemIsEditable)
+                self.expenses_table.setItem(i, j, empty_item)
             i += 1
 
         all_exp = self.bk.get_all_expenses()
@@ -500,13 +512,30 @@ class MainWindow(QtWidgets.QWidget):
                 cat = self.bk.get_cat_by_id(exp.category)
                 if cat is not None:
                     cat_name = cat.name
-            self.expenses_table.setItem(i, 0, QtWidgets.QTableWidgetItem(f'{exp.expense_date}'))
-            self.expenses_table.setItem(i, 1, QtWidgets.QTableWidgetItem(f'{exp.amount}'))
-            self.expenses_table.setItem(i, 2, QtWidgets.QTableWidgetItem(cat_name))
-            self.expenses_table.setItem(i, 3, QtWidgets.QTableWidgetItem(f'{exp.comment}'))
+            date = QtWidgets.QTableWidgetItem(f'{exp.expense_date}')
+            date.setFlags(date.flags() & ~Qt.ItemIsEditable)
+            self.expenses_table.setItem(i, 0, date)
+            amount = QtWidgets.QTableWidgetItem(f'{exp.amount}')
+            amount.setFlags(amount.flags() & ~Qt.ItemIsEditable)
+            self.expenses_table.setItem(i, 1, amount)
+            cat = QtWidgets.QTableWidgetItem(cat_name)
+            cat.setFlags(cat.flags() & ~Qt.ItemIsEditable)
+            self.expenses_table.setItem(i, 2, cat)
+            comment = QtWidgets.QTableWidgetItem(f'{exp.comment}')
+            comment.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable)
+            self.expenses_table.setItem(i, 3, comment)
 
             if i == 0:
                 break
+
+    def save_comments(self):
+        for i in range(0, self.expenses_table.rowCount()):
+            comment_item = self.expenses_table.item(i, 3)
+            comment = comment_item.text()
+            if comment != '':
+                cat_name = self.expenses_table.item(i, 2).text()
+                date = self.expenses_table.item(i, 0).text()
+                self.bk.update_expense(date, cat_name, comment)
 
     def update_bud_table(self):
         all_exp = self.bk.get_all_expenses()
