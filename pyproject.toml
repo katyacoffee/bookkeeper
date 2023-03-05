@@ -10,6 +10,8 @@ packages = [{include = "bookkeeper"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 pytest-cov = "^4.0.0"
+pytest-qt = "^4.2.0"
+pytest-env = "^0.8.1"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -32,6 +32,15 @@ class AbstractBookkeeper(Protocol):
     def update_expense(self, date: str, cat: str, comment: str) -> None:
         pass
 
+    def get_expenses_with_cat(self, cat: str) -> list[Expense]:
+        pass
+
+    def set_expenses_with_new_cat(self, exps: list[Expense], cat: int) -> None:
+        pass
+
+    def delete_expenses(self, exps: list[Expense]) -> None:
+        pass
+
 
 class AbstractView(Protocol):
     def set_category_list(self, categories: list[Category]) -> None:
@@ -77,7 +86,13 @@ class Bookkeeper:
         cats = self.cat_repo.get_all({'name': cat})
         if len(cats) == 0:
             return
-        self.cat_repo.delete(cats[0].pk)
+        category = cats[0]
+        children = self.get_all_child_cats(category.pk)
+        for c in children:
+            exps = self.get_expenses_with_cat(c.name)
+            self.delete_expenses(exps)
+            self.del_cat(c.name)
+        self.cat_repo.delete(category.pk)
 
     def update_expense(self, date: str, cat: str, comment: str):
         cat_id = self.get_cat_id_by_name(cat)
@@ -89,3 +104,23 @@ class Bookkeeper:
         new_exp = exps[0]
         new_exp.comment = comment
         self.exp_repo.update(new_exp)
+
+    def get_expenses_with_cat(self, cat: str):
+        exps = self.exp_repo.get_all({'category': cat})
+        return exps
+
+    def set_expenses_with_new_cat(self, exps: list[Expense], cat: int):
+        for e in exps:
+            e.category = cat
+            self.exp_repo.update(e)
+
+    def delete_expenses(self, exps: list[Expense]):
+        for e in exps:
+            self.exp_repo.delete(e.pk)
+
+    def get_all_child_cats(self, cat_id: int):
+        return self.cat_repo.get_all({'parent': f'{cat_id}'})
+
+
+
+
