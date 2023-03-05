@@ -46,13 +46,9 @@ class AddExpense(QtWidgets.QWidget):
         self.bk: AbstractBookkeeper
         self.win: AbstractWindow
 
-
-        # self.layout = QtWidgets.QHBoxLayout()  # создаем расладку, чтобы поместить в один виджет несколько
-        # self.setLayout(self.layout)  # заполнение виджета раскладкой
-
         self.grid = QtWidgets.QGridLayout()
 
-        self.comment = 'TODO: сделать добавление комментария?'
+        self.comment = ''
 
         self.sum_text_widget = QtWidgets.QLabel("Сумма")
         self.grid.addWidget(self.sum_text_widget, 1, 1)
@@ -84,11 +80,6 @@ class AddExpense(QtWidgets.QWidget):
 
         self.setLayout(self.grid)
 
-        # self.amount = QtWidgets.QLineEdit()  # LineEdit позволяет в отличие от TextEdit в одну строчку только набирать
-        # self.amount.setPlaceholderText('Сумма')
-        # self.amount.setValidator(QtGui.QIntValidator(1, 10000000, self))  # проверяет правильность введенных данных
-        # self.layout.addWidget(self.amount)
-
     def is_filled(self):
         return bool(self.cat_list_widget.get_id() and self.comment and self.sum_widget.text())
 
@@ -119,9 +110,6 @@ class AddExpense(QtWidgets.QWidget):
     def set_window(self, win: AbstractWindow):
         self.win = win
 
-    # def question_win(self, queswin: AbstractWindow):  # TEST
-    #     self.queswin = queswin  # TEST
-
 
 class ListWidget(QtWidgets.QComboBox):
     def __init__(self, *args, **kwargs):
@@ -135,10 +123,6 @@ class ListWidget(QtWidgets.QComboBox):
 
     def add_line(self, cat: Category = Category('Продукты')):
         self.lines.append(cat.name)
-
-    # def changeEvent(self, event):
-    #     if all(line != '' for line in self.lines):
-    #         self.add_line()
 
     def get_data(self):
         return [line.get_data() for line in self.lines]
@@ -174,11 +158,7 @@ class EditorWindow(QtWidgets.QWidget):
 
         self.grid = QtWidgets.QGridLayout()
 
-        # self.layout = QtWidgets.QVBoxLayout()
-        # self.setLayout(self.layout)
-
         self.cat_list_widget = ListWidget()
-        # self.layout.addWidget(self.cat_list_widget, 2, 1)
         self.grid.addWidget(self.cat_list_widget, 2, 1)
         self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
 
@@ -199,7 +179,6 @@ class EditorWindow(QtWidgets.QWidget):
         self.grid.addWidget(self.new2_text_widget, 3, 2)
 
         self.new1_widget = QtWidgets.QLineEdit('')
-        # self.new1_widget.setText('')
         self.t = QRegularExpressionValidator(QRegularExpression('[а-я-А-Я-a-z-A-Z-0-9 ]+'))
         self.new1_widget.setValidator(self.t)
         self.new1_widget.setStyleSheet('border-radius: 5px;')
@@ -318,7 +297,6 @@ class EditorWindow(QtWidgets.QWidget):
                              par_cat_name + "'")
             info_win.exec_()
         else:
-            # self.bk.delete_expenses(exp_with_cat)
             info_win = QMessageBox(self)
             info_win.setIcon(QMessageBox.Information)
             info_win.addButton(QMessageBox.Ok)
