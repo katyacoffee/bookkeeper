@@ -53,6 +53,9 @@ class Bookkeeper:
     def del_all_expenses(self):
         self.exp_repo.delete_all()
 
+    def del_all_cats(self):
+        self.cat_repo.delete_all()
+
     def del_cat(self, cat: str):
         cats = self.cat_repo.get_all({'name': cat})
         if len(cats) == 0:

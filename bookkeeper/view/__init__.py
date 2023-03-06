@@ -239,18 +239,11 @@ class EditorWindow(QtWidgets.QWidget):
         self.bk = bk
 
     def call_del_all_question(self):
-        msgbox = QMessageBox(self)
-        msgbox.setIcon(QMessageBox.Warning)
-        msgbox.setText("Вы уверены, что хотите удалить все расходы?")
-        msgbox.setWindowTitle('Очистить расходы')
-        msgbox.addButton(QMessageBox.Yes)
-        msgbox.addButton(QMessageBox.No)
-        msgbox.setDefaultButton(QMessageBox.No)
-        msgbox.buttonClicked.connect(self.del_all_expenses)
-        msgbox.exec_()
+        ans = QMessageBox.question(self, 'Очистить расходы', "Вы уверены, что хотите удалить все расходы?")
+        self.del_all_expenses(ans)
 
     def del_all_expenses(self, button):
-        if button.text() == '&No':
+        if button == QMessageBox.No:
             return
         self.bk.del_all_expenses()
         self.parentWindow.update_exp_table()
@@ -264,18 +257,11 @@ class EditorWindow(QtWidgets.QWidget):
         self.parentWindow.set_budget(period, int(bud))
 
     def call_del_cat_question(self):
-        msgbox = QMessageBox(self)
-        msgbox.setIcon(QMessageBox.Warning)
-        msgbox.setText("Вы уверены, что хотите удалить категорию?")
-        msgbox.setWindowTitle('Удалить категорию')
-        msgbox.addButton(QMessageBox.Ok)
-        msgbox.addButton(QMessageBox.Cancel)
-        msgbox.setDefaultButton(QMessageBox.Cancel)
-        msgbox.buttonClicked.connect(self.del_cat)
-        msgbox.exec_()
+        ans = QMessageBox.question(self, 'Удалить категорию', "Вы уверены, что хотите удалить категорию?")
+        self.del_cat(ans)
 
     def del_cat(self, button):
-        if button.text() == '&Cancel':
+        if button == QMessageBox.No:
             return
         cat_name = self.cat_list_widget.currentText()
         pk = self.bk.get_cat_id_by_name(cat_name)
@@ -286,22 +272,16 @@ class EditorWindow(QtWidgets.QWidget):
         parent = int(category.parent)
         if parent > 0:
             self.bk.set_expenses_with_new_cat(exp_with_cat, parent)
-            info_win = QMessageBox(self)
-            info_win.setIcon(QMessageBox.Information)
-            info_win.addButton(QMessageBox.Ok)
             par_cat_name = 'None'
             parent_cat = self.bk.get_cat_by_id(parent)
             if parent_cat is not None:
                 par_cat_name = parent_cat.name
-            info_win.setText("Категория '" + cat_name + "' удалена. Расходы перемещены на родительскую категорию '" +
-                             par_cat_name + "'")
-            info_win.exec_()
+            QMessageBox.information(self, 'Категория удалена',
+                                    "Категория '" + cat_name + "' удалена. Расходы перемещены на родительскую категорию '" +
+                                    par_cat_name + "'")
         else:
-            info_win = QMessageBox(self)
-            info_win.setIcon(QMessageBox.Information)
-            info_win.addButton(QMessageBox.Ok)
-            info_win.setText("Категория '" + cat_name + "' удалена. Расходы, связанные с ней, также удалены.")
-            info_win.exec_()
+            QMessageBox.information(self, 'Категория удалена',
+                                    "Категория '" + cat_name + "' удалена. Расходы, связанные с ней, также удалены.")
         self.bk.del_cat(cat_name)
         cats = self.bk.get_all_categories()
         self.cat_list_widget.set_category_list(cats)
@@ -314,26 +294,17 @@ class EditorWindow(QtWidgets.QWidget):
         parcat = self.new2_widget.text()
         if parcat == '':
             self.bk.add_category(newcat, 0)
-            info_win = QMessageBox(self)
-            info_win.setIcon(QMessageBox.Information)
-            info_win.addButton(QMessageBox.Ok)
-            info_win.setText("Новая категория '" + newcat + "' успешно добавлена")
-            info_win.exec_()
+            QMessageBox.information(self, 'Категория добавлена',
+                                    "Новая категория '" + newcat + "' успешно добавлена")
         else:
             found_id = self.bk.get_cat_id_by_name(parcat)
             if found_id == 0:
-                info_win = QMessageBox(self)
-                info_win.setIcon(QMessageBox.Critical)
-                info_win.addButton(QMessageBox.Cancel)
-                info_win.setText("Родительская категория '" + parcat + "' не найдена!")
-                info_win.exec_()
+                QMessageBox.critical(self, 'Категория не найдена',
+                                        "Родительская категория '" + parcat + "' не найдена!")
             else:
                 self.bk.add_category(newcat, found_id)
-                info_win = QMessageBox(self)
-                info_win.setIcon(QMessageBox.Information)
-                info_win.addButton(QMessageBox.Ok)
-                info_win.setText("Новая подкатегория '" + newcat + "' категории '" + parcat + "' успешно добавлена")
-                info_win.exec_()
+                QMessageBox.information(self, 'Категория добавлена',
+                                        "Новая подкатегория '" + newcat + "' категории '" + parcat + "' успешно добавлена")
 
         cats = self.bk.get_all_categories()
         self.cat_list_widget.set_category_list(cats)
