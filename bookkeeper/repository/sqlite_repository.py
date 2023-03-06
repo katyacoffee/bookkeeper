@@ -28,7 +28,8 @@ class SqliteRepository(AbstractRepository[T]):
                 cols.append(res_str)
 
             columns = ', '.join(cols)
-            q = f'CREATE TABLE IF NOT EXISTS {self.table_name} (id INTEGER PRIMARY KEY, {columns})'
+            q = f'CREATE TABLE IF NOT EXISTS {self.table_name} ' \
+                f'(id INTEGER PRIMARY KEY, {columns})'
             conn.cursor().execute(q)
         conn.close()
 
@@ -77,7 +78,8 @@ class SqliteRepository(AbstractRepository[T]):
         """ Получить объект по id """
         conn = sql.connect(self.db_addr)
         with conn:
-            result = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}').fetchall()
+            result = conn.cursor().execute(f'SELECT * FROM {self.table_name} '
+                                           f'WHERE id = {pk}').fetchall()
             res_obj = self.cls_type()
             for r in result:
                 i = 1
@@ -100,7 +102,8 @@ class SqliteRepository(AbstractRepository[T]):
         if where is None:
             conn = sql.connect(self.db_addr)
             with conn:
-                result = conn.cursor().execute(f'SELECT * FROM {self.table_name}').fetchall()
+                result = conn.cursor().execute(f'SELECT * FROM {self.table_name}').\
+                    fetchall()
                 objects = []
                 for r in result:
                     res_obj = self.cls_type()
@@ -128,7 +131,8 @@ class SqliteRepository(AbstractRepository[T]):
 
             conn = sql.connect(self.db_addr)
             with conn:
-                result = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE {condition}').fetchall()
+                result = conn.cursor().execute(f'SELECT * FROM {self.table_name} '
+                                               f'WHERE {condition}').fetchall()
                 objects = []
                 for r in result:
                     res_obj = self.cls_type()
@@ -156,14 +160,16 @@ class SqliteRepository(AbstractRepository[T]):
                 cols.append(f'{x} = {attr}')
 
             update_statement = ', '.join(cols)
-            conn.cursor().execute(f'UPDATE {self.table_name} SET {update_statement} WHERE id = {obj.pk}')
+            conn.cursor().execute(f'UPDATE {self.table_name} SET {update_statement} '
+                                  f'WHERE id = {obj.pk}')
         conn.close()
 
     def delete(self, pk: int) -> None:
         """ Удалить запись """
         conn = sql.connect(self.db_addr)
         with conn:
-            result = conn.cursor().execute(f'SELECT * FROM {self.table_name} WHERE id = {pk}').fetchall()
+            result = conn.cursor().execute(f'SELECT * FROM {self.table_name} '
+                                           f'WHERE id = {pk}').fetchall()
             if len(result) == 0:
                 raise KeyError("not found")
             conn.cursor().execute(f'DELETE FROM {self.table_name} WHERE id = {pk}')

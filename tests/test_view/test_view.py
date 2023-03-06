@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMessageBox, QTableWidgetItem
+from PySide6.QtWidgets import QMessageBox
 from pytestqt.qt_compat import qt_api
 import pytest
 

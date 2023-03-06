@@ -16,7 +16,7 @@ class AbstractBookkeeper(Protocol):
     def get_all_categories(self) -> list[Category]:
         pass
 
-    def get_cat_by_id(self, id: int) -> Category:
+    def get_cat_by_id(self, pk: int) -> Category | None:
         pass
 
     def get_cat_id_by_name(self, name: str) -> int:

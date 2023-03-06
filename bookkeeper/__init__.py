@@ -12,34 +12,34 @@ class Bookkeeper:
         self.cats = self.cat_repo.get_all()
         self.view.set_category_list(self.cats)
 
-    def add_expense(self, expense: AddExpenseItem):
+    def add_expense(self, expense: AddExpenseItem) -> None:
         self.exp_repo.add(Expense(expense.amount, expense.category))
 
-    def add_category(self, name: str, parent: int = 0):
+    def add_category(self, name: str, parent: int = 0) -> None:
         self.cat_repo.add(Category(name, parent))
 
-    def get_all_expenses(self):
+    def get_all_expenses(self) -> list[Expense]:
         return self.exp_repo.get_all()
 
-    def get_all_categories(self):
+    def get_all_categories(self) -> list[Category]:
         return self.cat_repo.get_all()
 
-    def get_cat_by_id(self, id: int):
-        return self.cat_repo.get(id)
+    def get_cat_by_id(self, pk: int) -> Category | None:
+        return self.cat_repo.get(pk)
 
-    def get_cat_id_by_name(self, name: str):
+    def get_cat_id_by_name(self, name: str) -> int:
         cat = self.cat_repo.get_all({'name': name})
         if len(cat) == 0:
             return 0
         return cat[0].pk
 
-    def del_all_expenses(self):
+    def del_all_expenses(self) -> None:
         self.exp_repo.delete_all()
 
-    def del_all_cats(self):
+    def del_all_cats(self) -> None:
         self.cat_repo.delete_all()
 
-    def del_cat(self, cat: str):
+    def del_cat(self, cat: str) -> None:
         cats = self.cat_repo.get_all({'name': cat})
         if len(cats) == 0:
             return
@@ -51,7 +51,7 @@ class Bookkeeper:
             self.del_cat(c.name)
         self.cat_repo.delete(category.pk)
 
-    def update_expense(self, date: str, cat: str, comment: str):
+    def update_expense(self, date: str, cat: str, comment: str) -> None:
         cat_id = self.get_cat_id_by_name(cat)
         if cat_id == 0:
             return
@@ -62,20 +62,18 @@ class Bookkeeper:
         new_exp.comment = comment
         self.exp_repo.update(new_exp)
 
-    def get_expenses_with_cat(self, cat: str):
+    def get_expenses_with_cat(self, cat: str) -> list[Expense]:
         exps = self.exp_repo.get_all({'category': cat})
         return exps
 
-    def set_expenses_with_new_cat(self, exps: list[Expense], cat: int):
+    def set_expenses_with_new_cat(self, exps: list[Expense], cat: int) -> None:
         for e in exps:
             e.category = cat
             self.exp_repo.update(e)
 
-    def delete_expenses(self, exps: list[Expense]):
+    def delete_expenses(self, exps: list[Expense]) -> None:
         for e in exps:
             self.exp_repo.delete(e.pk)
 
-    def get_all_child_cats(self, cat_id: int):
+    def get_all_child_cats(self, cat_id: int) -> list[Category]:
         return self.cat_repo.get_all({'parent': f'{cat_id}'})
-
-

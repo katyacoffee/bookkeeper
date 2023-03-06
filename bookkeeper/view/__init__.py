@@ -1,11 +1,9 @@
-import sys, time
-from dataclasses import dataclass
 from typing import Protocol
 from datetime import datetime as dt
 import datetime
 
-from PySide6 import QtGui, QtWidgets, QtCore  # последний - виджет, содержащий все необходимые документы
-from PySide6.QtWidgets import QComboBox, QStyle, QMessageBox
+from PySide6 import QtGui, QtWidgets
+from PySide6.QtWidgets import QComboBox, QMessageBox
 from PySide6.QtCore import QRegularExpression, Qt
 from PySide6.QtGui import QRegularExpressionValidator
 
@@ -60,33 +58,34 @@ class AddExpense(QtWidgets.QWidget):
 
         self.cat_list_widget = ListWidget()
         self.grid.addWidget(self.cat_list_widget, 2, 2)
-        self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
+        self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; '
+                                           'padding: 1px 18px 1px 3px; min-width: 6em;')
 
         self.btn_edit = QtWidgets.QPushButton('Редактировать')
         self.grid.addWidget(self.btn_edit, 2, 3)
-        self.btn_edit.setStyleSheet('QPushButton { background-color: #CDAF95; border-radius: 5px; height: 20px; width: 350px; }'
+        self.btn_edit.setStyleSheet('QPushButton { background-color: #CDAF95; '
+                                    'border-radius: 5px; height: 20px; width: 350px; }'
                                     'QPushButton:pressed { background-color: #808A87 }')
         self.btn_edit.clicked.connect(self.edit_data)
 
         self.btn_add = QtWidgets.QPushButton('Добавить')
         self.grid.addWidget(self.btn_add, 3, 2)
         self.btn_add.setGeometry(10, 10, 30, 30)
-        self.btn_add.setStyleSheet('QPushButton { background-color: #CDAF95; border-radius: 5px; height: 20px; }'
+        self.btn_add.setStyleSheet('QPushButton { background-color: #CDAF95; '
+                                   'border-radius: 5px; height: 20px; }'
                                    'QPushButton:pressed { background-color: #808A87 }')
         self.btn_add.clicked.connect(self.get_data)
 
         self.setLayout(self.grid)
 
-    def is_filled(self):
-        return bool(self.cat_list_widget.get_id() and self.comment and self.sum_widget.text())
-
-    def get_data(self):
+    def get_data(self) -> None:
         if self.bk is None:
             raise MemoryError('Bookkeeper is not initialised')
         sum_text = self.sum_widget.text()
         if sum_text == '':
             sum_text = '0'
-        self.last_expense_item = AddExpenseItem(self.cat_list_widget.get_id(), self.comment, int(sum_text))
+        self.last_expense_item = AddExpenseItem(self.cat_list_widget.get_id(),
+                                                self.comment, int(sum_text))
         self.sum_widget.clear()
         self.bk.add_expense(self.last_expense_item)
         self.win.update_exp_table()
@@ -94,17 +93,17 @@ class AddExpense(QtWidgets.QWidget):
         print(self.last_expense_item)
         return
 
-    def edit_data(self):
+    def edit_data(self) -> None:
         self.win.open_editor()
 
     def set_category_list(self, categories: list[Category]) -> None:
         self.cat_list_widget.set_category_list(categories)
 
-    def set_bookkeeper(self, bk: AbstractBookkeeper):
+    def set_bookkeeper(self, bk: AbstractBookkeeper) -> None:
         self.bk = bk
         self.cat_list_widget.set_bookkeeper(bk)
 
-    def set_window(self, win: AbstractWindow):
+    def set_window(self, win: AbstractWindow) -> None:
         self.win = win
 
 
@@ -118,11 +117,8 @@ class ListWidget(QtWidgets.QComboBox):
         self.cat_list = []
         self.bk: AbstractBookkeeper
 
-    def add_line(self, cat: Category = Category('Продукты')):
+    def add_line(self, cat: Category = Category('Продукты')) -> None:
         self.lines.append(cat.name)
-
-    def get_data(self):
-        return [line.get_data() for line in self.lines]
 
     def get_id(self) -> int:
         cat_name = self.currentText()
@@ -141,7 +137,7 @@ class ListWidget(QtWidgets.QComboBox):
             self.addItem(line)
         self.repaint()
 
-    def set_bookkeeper(self, bk: AbstractBookkeeper):
+    def set_bookkeeper(self, bk: AbstractBookkeeper) -> None:
         self.bk = bk
 
 
@@ -157,7 +153,8 @@ class EditorWindow(QtWidgets.QWidget):
 
         self.cat_list_widget = ListWidget()
         self.grid.addWidget(self.cat_list_widget, 2, 1)
-        self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
+        self.cat_list_widget.setStyleSheet('border-radius: 5px; border: 1px solid gray; '
+                                           'padding: 1px 18px 1px 3px; min-width: 6em;')
 
         self.ed_text_widget = QtWidgets.QLabel("Редактировать категорию")
         self.grid.addWidget(self.ed_text_widget, 1, 1)
@@ -165,7 +162,9 @@ class EditorWindow(QtWidgets.QWidget):
 
         self.btn_del_cat = QtWidgets.QPushButton('Удалить категорию')
         self.grid.addWidget(self.btn_del_cat, 2, 2)
-        self.btn_del_cat.setStyleSheet('QPushButton {background-color: #EE6363;border-radius: 5px; height: 20px; width: 140px; font-weight: bold }'
+        self.btn_del_cat.setStyleSheet('QPushButton {background-color: #EE6363;'
+                                       'border-radius: 5px; height: 20px; width: 140px; '
+                                       'font-weight: bold }'
                                        'QPushButton:hover { background-color: #CD5555 }')
         self.btn_del_cat.clicked.connect(self.call_del_cat_question)
 
@@ -176,7 +175,8 @@ class EditorWindow(QtWidgets.QWidget):
         self.grid.addWidget(self.new2_text_widget, 3, 2)
 
         self.new1_widget = QtWidgets.QLineEdit('')
-        self.t = QRegularExpressionValidator(QRegularExpression('[а-я-А-Я-a-z-A-Z-0-9 ]+'))
+        self.t = QRegularExpressionValidator(
+            QRegularExpression('[а-я-А-Я-a-z-A-Z-0-9 ]+'))
         self.new1_widget.setValidator(self.t)
         self.new1_widget.setStyleSheet('border-radius: 5px;')
         self.grid.addWidget(self.new1_widget, 4, 1)
@@ -188,7 +188,8 @@ class EditorWindow(QtWidgets.QWidget):
 
         self.btn_add1 = QtWidgets.QPushButton('Добавить')
         self.grid.addWidget(self.btn_add1, 4, 3)
-        self.btn_add1.setStyleSheet('QPushButton { background-color: #6495ED; border-radius: 5px; height: 20px; width: 100px; }'
+        self.btn_add1.setStyleSheet('QPushButton { background-color: #6495ED; '
+                                    'border-radius: 5px; height: 20px; width: 100px; }'
                                     'QPushButton:pressed { background-color: #3D59AB }')
         self.btn_add1.clicked.connect(self.add_cat)
 
@@ -198,7 +199,9 @@ class EditorWindow(QtWidgets.QWidget):
 
         self.btn_del_bud = QtWidgets.QPushButton('Удалить все расходы')
         self.grid.addWidget(self.btn_del_bud, 6, 1)
-        self.btn_del_bud.setStyleSheet('QPushButton { background-color: #EE6363; border-radius: 5px; height: 20px; width: 140px; font-weight: bold }'
+        self.btn_del_bud.setStyleSheet('QPushButton { background-color: #EE6363; '
+                                       'border-radius: 5px; height: 20px; width: 140px; '
+                                       'font-weight: bold }'
                                        'QPushButton:hover { background-color: #CD5555 }')
         self.btn_del_bud.clicked.connect(self.call_del_all_question)
 
@@ -209,7 +212,8 @@ class EditorWindow(QtWidgets.QWidget):
         self.combobox1.addItem('День')
         self.combobox1.addItem('Неделя')
         self.combobox1.addItem('Месяц')
-        self.combobox1.setStyleSheet('border-radius: 5px; border: 1px solid gray; padding: 1px 18px 1px 3px; min-width: 6em;')
+        self.combobox1.setStyleSheet('border-radius: 5px; border: 1px solid gray; '
+                                     'padding: 1px 18px 1px 3px; min-width: 6em;')
 
         self.grid.addWidget(self.combobox1, 8, 1)
 
@@ -220,33 +224,36 @@ class EditorWindow(QtWidgets.QWidget):
 
         self.btn_add_bud = QtWidgets.QPushButton('Задать')
         self.grid.addWidget(self.btn_add_bud, 8, 3)
-        self.btn_add_bud.setStyleSheet('QPushButton { background-color: #6495ED; border-radius: 5px; height: 20px; width: 100px; }'
-                                       'QPushButton:pressed { background-color: #3D59AB }')
+        self.btn_add_bud.setStyleSheet('QPushButton { background-color: #6495ED; '
+                                       'border-radius: 5px; height: 20px; width: 100px; }'
+                                       'QPushButton:pressed { background-color: #3D59AB }'
+                                       )
         self.btn_add_bud.clicked.connect(self.get_bud_data)
 
         self.setLayout(self.grid)
 
-    def set_parent_window(self, win: AbstractWindow):
+    def set_parent_window(self, win: AbstractWindow) -> None:
         self.parentWindow = win
 
     def set_category_list(self, categories: list[Category]) -> None:
         self.cat_list_widget.set_category_list(categories)
 
-    def set_bookkeeper(self, bk: AbstractBookkeeper):
+    def set_bookkeeper(self, bk: AbstractBookkeeper) -> None:
         self.bk = bk
 
-    def call_del_all_question(self):
-        ans = QMessageBox.question(self, 'Очистить расходы', "Вы уверены, что хотите удалить все расходы?")
+    def call_del_all_question(self) -> None:
+        ans = QMessageBox.question(self, 'Очистить расходы',
+                                   "Вы уверены, что хотите удалить все расходы?")
         self.del_all_expenses(ans)
 
-    def del_all_expenses(self, button):
+    def del_all_expenses(self, button) -> None:
         if button == QMessageBox.No:
             return
         self.bk.del_all_expenses()
         self.parentWindow.update_exp_table()
         self.parentWindow.update_bud_table()
 
-    def get_bud_data(self):
+    def get_bud_data(self) -> None:
         bud = self.add_bud_widget.text()
         if bud == '':
             bud = '0'
@@ -257,11 +264,12 @@ class EditorWindow(QtWidgets.QWidget):
         f.write(self.parentWindow.budget_table.item(1, 1).text() + ',')
         f.write(self.parentWindow.budget_table.item(2, 1).text())
 
-    def call_del_cat_question(self):
-        ans = QMessageBox.question(self, 'Удалить категорию', "Вы уверены, что хотите удалить категорию?")
+    def call_del_cat_question(self) -> None:
+        ans = QMessageBox.question(self, 'Удалить категорию',
+                                   "Вы уверены, что хотите удалить категорию?")
         self.del_cat(ans)
 
-    def del_cat(self, button):
+    def del_cat(self, button) -> None:
         if button == QMessageBox.No:
             return
         cat_name = self.cat_list_widget.currentText()
@@ -277,12 +285,12 @@ class EditorWindow(QtWidgets.QWidget):
             parent_cat = self.bk.get_cat_by_id(parent)
             if parent_cat is not None:
                 par_cat_name = parent_cat.name
-            QMessageBox.information(self, 'Категория удалена',
-                                    "Категория '" + cat_name + "' удалена. Расходы перемещены на родительскую категорию '" +
-                                    par_cat_name + "'")
+            QMessageBox.information(self, 'Категория удалена', "Категория '" + cat_name +
+                                    "' удалена. Расходы перемещены на родительскую "
+                                    "категорию '" + par_cat_name + "'")
         else:
-            QMessageBox.information(self, 'Категория удалена',
-                                    "Категория '" + cat_name + "' удалена. Расходы, связанные с ней, также удалены.")
+            QMessageBox.information(self, 'Категория удалена', "Категория '" + cat_name +
+                                    "' удалена. Расходы, связанные с ней, также удалены.")
         self.bk.del_cat(cat_name)
         cats = self.bk.get_all_categories()
         self.cat_list_widget.set_category_list(cats)
@@ -290,7 +298,7 @@ class EditorWindow(QtWidgets.QWidget):
         self.parentWindow.update_exp_table()
         self.parentWindow.update_bud_table()
 
-    def add_cat(self):
+    def add_cat(self) -> None:
         newcat = self.new1_widget.text()
         parcat = self.new2_widget.text()
         if parcat == '':
@@ -301,11 +309,13 @@ class EditorWindow(QtWidgets.QWidget):
             found_id = self.bk.get_cat_id_by_name(parcat)
             if found_id == 0:
                 QMessageBox.critical(self, 'Категория не найдена',
-                                        "Родительская категория '" + parcat + "' не найдена!")
+                                     "Родительская категория '" + parcat +
+                                     "' не найдена!")
             else:
                 self.bk.add_category(newcat, found_id)
                 QMessageBox.information(self, 'Категория добавлена',
-                                        "Новая подкатегория '" + newcat + "' категории '" + parcat + "' успешно добавлена")
+                                        "Новая подкатегория '" + newcat + "' категории '"
+                                        + parcat + "' успешно добавлена")
 
         cats = self.bk.get_all_categories()
         self.cat_list_widget.set_category_list(cats)
@@ -354,8 +364,10 @@ class MainWindow(QtWidgets.QWidget):
         self.bud_layout = QtWidgets.QGridLayout()
 
         self.btn_add_comm = QtWidgets.QPushButton('Добавить комментарии')
-        self.btn_add_comm.setStyleSheet('QPushButton { background-color: #CDAF95; border-radius: 5px; height: 20px; width: 150px; }'
-                                   'QPushButton:pressed { background-color: #808A87 }')
+        self.btn_add_comm.setStyleSheet('QPushButton { background-color: #CDAF95; '
+                                        'border-radius: 5px; height: 20px; width: 150px; '
+                                        '} QPushButton:pressed { '
+                                        'background-color: #808A87 }')
         self.btn_add_comm.setMaximumWidth(350)
         self.btn_add_comm.clicked.connect(self.save_comments)
         self.bud_layout.addWidget(self.btn_add_comm, 0, 1)
@@ -405,26 +417,27 @@ class MainWindow(QtWidgets.QWidget):
 
         self.layout.addWidget(self.expense_adder)
 
-    def set_data(self, data: list[list[str]]):
+    def set_data(self, data: list[list[str]]) -> None:
         for i, row in enumerate(data):
             for j, x in enumerate(row):
-                self.expenses_table.setItem(i, j, QtWidgets.QTableWidgetItem(x.capitalize()))
+                self.expenses_table.setItem(i, j,
+                                            QtWidgets.QTableWidgetItem(x.capitalize()))
 
     def set_category_list(self, categories: list[Category]) -> None:
         self.expense_adder.set_category_list(categories)
         self.categories = categories
 
-    def set_bookkeeper(self, bk: AbstractBookkeeper):
+    def set_bookkeeper(self, bk: AbstractBookkeeper) -> None:
         self.bk = bk
         self.expense_adder.set_bookkeeper(bk)
         self.editor.set_bookkeeper(bk)
         self.update_exp_table()
         self.update_bud_table()
 
-    def update_exp_table(self):
+    def update_exp_table(self) -> None:
         i = 0
         while i < self.expenses_table.rowCount():
-            for j in range(0,4):
+            for j in range(0, 4):
                 empty_item = QtWidgets.QTableWidgetItem('')
                 empty_item.setFlags(~Qt.ItemIsEditable)
                 self.expenses_table.setItem(i, j, empty_item)
@@ -467,7 +480,7 @@ class MainWindow(QtWidgets.QWidget):
             if i == 0:
                 break
 
-    def save_comments(self):
+    def save_comments(self) -> None:
         for i in range(0, self.expenses_table.rowCount()):
             comment_item = self.expenses_table.item(i, 3)
             comment = comment_item.text()
@@ -476,7 +489,7 @@ class MainWindow(QtWidgets.QWidget):
                 date = self.expenses_table.item(i, 0).text()
                 self.bk.update_expense(date, cat_name, comment)
 
-    def update_bud_table(self):
+    def update_bud_table(self) -> None:
         all_exp = self.bk.get_all_expenses()
         exp_day = 0
         exp_week = 0
@@ -500,29 +513,28 @@ class MainWindow(QtWidgets.QWidget):
             if i == 2:
                 break
 
-
-    def open_editor(self):
+    def open_editor(self) -> None:
         self.editor.set_parent_window(self)
         cats = self.bk.get_all_categories()
         self.editor.set_category_list(cats)
         self.editor.show()
 
-    def set_daily_budget(self, amount: int):
+    def set_daily_budget(self, amount: int) -> None:
         self.budget_table.setItem(0, 1, QtWidgets.QTableWidgetItem(f'{amount}'))
-        self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount*7}'))
-        self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount*30}'))
+        self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount * 7}'))
+        self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount * 30}'))
 
-    def set_weekly_budget(self, amount: int):
+    def set_weekly_budget(self, amount: int) -> None:
         self.budget_table.setItem(0, 1, QtWidgets.QTableWidgetItem(f'{amount // 7}'))
         self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount}'))
         self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount // 7 * 30}'))
 
-    def set_monthly_budget(self, amount: int):
+    def set_monthly_budget(self, amount: int) -> None:
         self.budget_table.setItem(0, 1, QtWidgets.QTableWidgetItem(f'{amount // 30}'))
         self.budget_table.setItem(1, 1, QtWidgets.QTableWidgetItem(f'{amount // 30 * 7}'))
         self.budget_table.setItem(2, 1, QtWidgets.QTableWidgetItem(f'{amount}'))
 
-    def set_budget(self, period: str, amount: int):
+    def set_budget(self, period: str, amount: int) -> None:
         if period == 'День':
             self.set_daily_budget(amount)
         elif period == 'Неделя':
@@ -530,10 +542,10 @@ class MainWindow(QtWidgets.QWidget):
         elif period == 'Месяц':
             self.set_monthly_budget(amount)
 
-    def add_new_cat(self, name: str, parent: int):
+    def add_new_cat(self, name: str, parent: int) -> None:
         self.bk.add_category(name, parent)
 
-    def update_cat_table(self):
+    def update_cat_table(self) -> None:
         cats = self.bk.get_all_categories()
         self.expense_adder.set_category_list(cats)
         self.editor.set_category_list(cats)
@@ -544,12 +556,12 @@ class View:
         self.window = MainWindow()
         self.bk: AbstractBookkeeper
 
-    def show(self):
+    def show(self) -> None:
         self.window.show()
 
     def set_category_list(self, categories: list[Category]) -> None:
         self.window.set_category_list(categories)
 
-    def set_bookkeeper(self, bk: AbstractBookkeeper):
+    def set_bookkeeper(self, bk: AbstractBookkeeper) -> None:
         self.bk = bk
         self.window.set_bookkeeper(bk)

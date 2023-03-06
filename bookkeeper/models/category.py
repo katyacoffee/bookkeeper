@@ -19,7 +19,6 @@ class Category(Model):
     parent: int | None = None
     pk: int = 0
 
-
     def get_parent(self,
                    repo: AbstractRepository['Category']) -> 'Category | None':
         """

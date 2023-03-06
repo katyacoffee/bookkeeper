@@ -29,7 +29,6 @@ Category.create_from_tree(read_tree(cats), cat_repo)
 
 def get_category(command: str) -> Category | None:
     parent = 0
-    cat_name = ''
     index = -1
     try:
         index = command.index(' ')
@@ -82,4 +81,3 @@ while True:
         break
     else:
         print(ErrInvalidCmd)
-
