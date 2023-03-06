@@ -17,9 +17,6 @@ class SqliteRepository(AbstractRepository[T]):
 
         conn = sql.connect(self.db_addr)
         with conn:
-            # q = f'DROP TABLE IF EXISTS {self.table_name}'
-            # conn.cursor().execute(q)
-
             cols = []
             for x in self.columns:
                 attr = getattr(cls, x)

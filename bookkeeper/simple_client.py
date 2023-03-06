@@ -29,14 +29,14 @@ Category.create_from_tree(read_tree(cats), cat_repo)
 
 def get_category(command: str) -> Category | None:
     parent = 0
-    name = ''
+    cat_name = ''
     index = -1
     try:
         index = command.index(' ')
     except ValueError:
         pass
     if index >= 0:
-        name = command[0:command.index(' ')]
+        cat_name = command[0:command.index(' ')]
         command = command[command.index(' ') + 1:]
         if len(command) == 0:
             print(ErrNoParent)
@@ -46,8 +46,8 @@ def get_category(command: str) -> Category | None:
             return None
         parent = int(command)
     else:
-        name = command
-    category = Category(name, parent)
+        cat_name = command
+    category = Category(cat_name, parent)
     return category
 
 

@@ -24,9 +24,6 @@ class AbstractWindow(Protocol):
     def open_editor(self) -> None:
         pass
 
-    def question_del(self) -> None:  #TEST
-        pass  #TEST
-
     def set_budget(self, period: str, amount: int) -> None:
         pass
 
@@ -255,6 +252,10 @@ class EditorWindow(QtWidgets.QWidget):
             bud = '0'
         period = self.combobox1.currentText()
         self.parentWindow.set_budget(period, int(bud))
+        f = open("budget.txt", "w")
+        f.write(self.parentWindow.budget_table.item(0, 1).text() + ',')
+        f.write(self.parentWindow.budget_table.item(1, 1).text() + ',')
+        f.write(self.parentWindow.budget_table.item(2, 1).text())
 
     def call_del_cat_question(self):
         ans = QMessageBox.question(self, 'Удалить категорию', "Вы уверены, что хотите удалить категорию?")
@@ -315,11 +316,8 @@ class EditorWindow(QtWidgets.QWidget):
 class MainWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.resize(500, 500) # TODO: подобрать размер относительно габаритов экрана
-        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        self.showMaximized()  # !
+        self.showMaximized()
         self.setWindowTitle('Bookkeeper')
-        # self.setStyleSheet('background-color: #188')
 
         self.bk: AbstractBookkeeper
         self.editor = EditorWindow()
@@ -330,21 +328,19 @@ class MainWindow(QtWidgets.QWidget):
         self.expenses_table = QtWidgets.QTableWidget(4, 20)
         self.expenses_table.setColumnCount(4)
         self.expenses_table.setRowCount(20)
-        # self.expenses_table.setModel(ItemModel(20, 4))
         self.expenses_table.setHorizontalHeaderLabels(
             "Дата Сумма Категория Комментарий".split())
 
         header = self.expenses_table.horizontalHeader()
         header.setSectionResizeMode(
-            0, QtWidgets.QHeaderView.ResizeToContents)
+            0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(
-            1, QtWidgets.QHeaderView.ResizeToContents)
+            1, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(
-            2, QtWidgets.QHeaderView.ResizeToContents)
+            2, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(
             3, QtWidgets.QHeaderView.Stretch)
 
-        #self.expenses_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.expenses_table.verticalHeader().hide()
 
         self.expenses_table.setStyleSheet('border: 1px solid gray;')
@@ -379,7 +375,7 @@ class MainWindow(QtWidgets.QWidget):
 
         header_budget = self.budget_table.horizontalHeader()
         header_budget.setSectionResizeMode(
-            0, QtWidgets.QHeaderView.ResizeToContents)
+            0, QtWidgets.QHeaderView.Stretch)
         header_budget.setSectionResizeMode(
             1, QtWidgets.QHeaderView.Stretch)
 
@@ -404,14 +400,10 @@ class MainWindow(QtWidgets.QWidget):
 
         self.layout.addWidget(self.budget_table)
 
-        # добавить таблицу Бюджета
-
         self.expense_adder = AddExpense()
         self.expense_adder.set_window(self)
-        # self.budget_adder = AddExpense()
 
         self.layout.addWidget(self.expense_adder)
-        # self.layout.addWidget(self.budget_adder)
 
     def set_data(self, data: list[list[str]]):
         for i, row in enumerate(data):
@@ -500,6 +492,14 @@ class MainWindow(QtWidgets.QWidget):
         self.budget_table.setItem(0, 0, QtWidgets.QTableWidgetItem(f'{exp_day}'))
         self.budget_table.setItem(1, 0, QtWidgets.QTableWidgetItem(f'{exp_week}'))
         self.budget_table.setItem(2, 0, QtWidgets.QTableWidgetItem(f'{exp_month}'))
+
+        f = open('budget.txt', 'r')
+        bud = f.read().split(',')
+        for i in range(0, len(bud)):
+            self.budget_table.setItem(i, 1, QtWidgets.QTableWidgetItem(f'{bud[i]}'))
+            if i == 2:
+                break
+
 
     def open_editor(self):
         self.editor.set_parent_window(self)

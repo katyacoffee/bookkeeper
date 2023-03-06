@@ -1,15 +1,9 @@
 from PySide6.QtWidgets import QMessageBox, QTableWidgetItem
-from _pytest.monkeypatch import monkeypatch
 from pytestqt.qt_compat import qt_api
 import pytest
 
 from bookkeeper import Bookkeeper, AddExpenseItem
 from bookkeeper.view import View
-
-# TODO: добавить тесты для:
-# EditorWindow -> btn_add1, btn_del_bud,
-#                 btn_add_bud, btn_del_cat
-# MainWindow   -> btn_add_comm
 
 
 @pytest.fixture
@@ -250,5 +244,4 @@ def test_add_comm(qtbot, window):
 
     # get results
     comm = window.expenses_table.item(0, 3).text()
-    # category_value = window.expenses_table.item(0, 3).text()
     assert comm == comment

@@ -1,7 +1,6 @@
 from typing import Protocol
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense, AddExpenseItem
-from bookkeeper.repository.sqlite_repository import SqliteRepository
 
 
 class AbstractBookkeeper(Protocol):
